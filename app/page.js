@@ -332,7 +332,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="prose prose-lg dark:prose-invert max-w-none">
                     <ReactMarkdown>{story}</ReactMarkdown>
                   </div>
                 </div>
