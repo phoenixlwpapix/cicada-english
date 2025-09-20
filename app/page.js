@@ -8,7 +8,7 @@ import { commonWords } from "@/lib/words"; // 1. 引入你的单词列表
 import { ArrowLeft, ArrowRight, Sparkles, BookOpen, Brain } from "lucide-react";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks"; // 方便适配屏幕大小
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function HomePage() {
@@ -23,15 +23,27 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
 
   const { width, height } = useWindowSize();
-  const isPerfectScore = score !== null && score === questions.length;
 
   const [showConfetti, setShowConfetti] = useState(false);
 
   const storyRef = useRef(null);
 
+  // --- 在这里添加下面的代码 ---
+  useEffect(() => {
+    // 检查 story 是否有内容，并且 ref 已经附加到 DOM 元素上
+    if (story && storyRef.current) {
+      storyRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [story]); // 依赖项数组是关键，这个 effect 只在 `story` 状态改变时运行
+
   const handleGenerate = async (wordsToUse) => {
     setLoading(true);
     setScore(null);
+    setStory("");
+    setQuestions("");
     console.log("[Frontend] Starting generation with words:", wordsToUse);
 
     try {
@@ -161,9 +173,6 @@ export default function HomePage() {
       alert(`网络请求错误: ${err.message || "请检查网络连接"}`);
     } finally {
       setLoading(false);
-      if (storyRef.current) {
-        storyRef.current.scrollIntoView({ behavior: "smooth" });
-      }
     }
   };
 
@@ -199,7 +208,8 @@ export default function HomePage() {
 
     // 将单词数组转换成逗号分隔的字符串
     const selectedWordsString = selectedWords.join(", ");
-
+    // <-- 新增：用随机生成的单词字符串来更新输入框的状态
+    setWords(selectedWordsString);
     // 使用随机选出的单词字符串，调用我们的核心生成函数
     handleGenerate(selectedWordsString);
   };
@@ -213,15 +223,12 @@ export default function HomePage() {
         <div className="text-center mb-16 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-cyan-100 dark:from-emerald-900/50 dark:to-cyan-900/50 rounded-full mb-6">
             <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-              知了英语阅读训练
+            <span className="text-lg font-medium text-emerald-700 dark:text-emerald-300">
+              知了英语AI阅读训练
             </span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 dark:text-slate-100 mb-6">
-            个性化英语学习体验
-          </h2>
           <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            输入你想学习的单词，AI将为你生成有趣的故事和阅读理解题，让学习充满乐趣！
+            AI将根据你输入的单词自动生成有趣的故事和阅读理解题，让学习充满乐趣！
           </p>
         </div>
 
@@ -249,6 +256,7 @@ export default function HomePage() {
                   onChange={(e) => setWords(e.target.value)}
                   placeholder="例如：dog, sunny, friend, happy, school..."
                   className="min-h-[100px] text-base resize-none"
+                  disabled={loading}
                 />
 
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -324,7 +332,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
-                  <div className="text-slate-800 dark:text-slate-100 leading-relaxed text-base">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
                     <ReactMarkdown>{story}</ReactMarkdown>
                   </div>
                 </div>
@@ -494,7 +502,7 @@ export default function HomePage() {
 
                 {/* Submit and Results Section */}
                 <div className="border-t border-slate-200 dark:border-slate-600 pt-6">
-                  {currentQuestion === questions.length - 1 &&
+                  {userAnswers.every((answer) => answer !== "") &&
                     score === null && (
                       <Button
                         onClick={handleSubmit}
@@ -571,6 +579,12 @@ export default function HomePage() {
             recycle={false}
             numberOfPieces={200}
             gravity={0.3}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              zIndex: 9999,
+            }}
           />
         )}
       </main>
