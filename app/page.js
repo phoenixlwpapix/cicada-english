@@ -10,6 +10,7 @@ import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks"; // 方便适配屏幕大小
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function HomePage() {
   const [words, setWords] = useState("");
@@ -331,10 +332,32 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
-                  <div className="prose prose-lg dark:prose-invert max-w-none">
-                    <ReactMarkdown>{story}</ReactMarkdown>
-                  </div>
+                <div className="text-lg bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({ node, ...props }) => (
+                        <p className="mt-4" {...props} />
+                      ),
+                      h1: ({ node, ...props }) => (
+                        <h1
+                          className="text-2xl font-bold mt-6 mb-4"
+                          {...props}
+                        />
+                      ),
+                      h2: ({ node, ...props }) => (
+                        <h2
+                          className="text-xl font-semibold mt-5 mb-3"
+                          {...props}
+                        />
+                      ),
+                      li: ({ node, ...props }) => (
+                        <li className="ml-6 list-disc" {...props} />
+                      ),
+                    }}
+                  >
+                    {story}
+                  </ReactMarkdown>
                 </div>
               </CardContent>
             </Card>
