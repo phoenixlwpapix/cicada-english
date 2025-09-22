@@ -31,6 +31,7 @@ export async function POST(req) {
 
     const prompt = `
 你是一名面向中国六年级小学生的英语阅读教师。请根据给定的单词编写一篇约220词的英语短文。随后设计5道英文阅读理解单选题：
+人名要求：主人公名字从以下名字中任选（男生名 Liam, Noah, Oliver. James, Elijah, William, Henry, Lucas, Theodore 和 Mateo；女生名 Emma, Olivia, Sophia, Charlotte. Amelia, Isabella, Evelyn, Ava, Mia 和 Luna.）
 文章要求：内容贴近小学生生活，语言清晰简洁，难度不超过KET水平。文章标题用二号标题(##)。
 出题要求：每题提供 A/B/C 三个选项；明确标注正确答案；正确答案在 A、B、C 中分布均衡，不集中在同一个选项。
 
