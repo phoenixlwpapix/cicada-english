@@ -3,14 +3,33 @@
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import AppHeader from "@/components/AppHeader";
 import { commonWords } from "@/lib/words"; // 1. 引入你的单词列表
-import { ArrowLeft, ArrowRight, Sparkles, BookOpen, Brain } from "lucide-react";
+import { processQuizSubmission, migrateLegacyData } from "@/lib/quiz-data";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  BookOpen,
+  Brain,
+  Siren,
+} from "lucide-react";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks"; // 方便适配屏幕大小
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function HomePage() {
   const [words, setWords] = useState("");
@@ -24,10 +43,39 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
 
   const { width, height } = useWindowSize();
+  const { user } = useAuth();
+  const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [guestScore, setGuestScore] = useState(null);
+  const [isBouncing, setIsBouncing] = useState(true);
+
+  const handleModalClose = () => {
+    setShowLoginModal(false);
+    setGuestScore(null);
+  };
 
   const storyRef = useRef(null);
+
+  // Mutation for submitting quiz
+  const submitQuizMutation = useMutation({
+    mutationFn: processQuizSubmission,
+    onSuccess: () => {
+      // Invalidate all dashboard-related queries
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === "userStats" ||
+          query.queryKey[0] === "quizAttempts" ||
+          query.queryKey[0] === "leaderboard",
+      });
+    },
+    onError: (error) => {
+      console.error("Error submitting quiz:", error);
+      alert("提交成绩时出错，请重试。");
+    },
+  });
 
   // --- 在这里添加下面的代码 ---
   useEffect(() => {
@@ -39,6 +87,18 @@ export default function HomePage() {
       });
     }
   }, [story]); // 依赖项数组是关键，这个 effect 只在 `story` 状态改变时运行
+
+  // Migrate legacy data on component mount
+  useEffect(() => {
+    migrateLegacyData();
+  }, []);
+
+  // Stop bouncing animation when generation starts
+  useEffect(() => {
+    if (loading) {
+      setIsBouncing(false);
+    }
+  }, [loading]);
 
   const handleGenerate = async (wordsToUse) => {
     setLoading(true);
@@ -188,12 +248,29 @@ export default function HomePage() {
     }, 300);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     let correct = 0;
     for (let i = 0; i < answers.length; i++) {
       if (userAnswers[i] === answers[i]) correct++;
     }
-    setScore(correct * 20);
+    const finalScore = correct * 20;
+    setScore(finalScore);
+
+    // Check if user is authenticated
+    if (!user) {
+      // Show modal for guest users
+      setGuestScore(finalScore);
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Use mutation to submit quiz
+    await submitQuizMutation.mutateAsync({
+      totalQuestions: answers.length,
+      correctAnswers: correct,
+      score: finalScore,
+      user,
+    });
 
     if (correct === questions.length) {
       setShowConfetti(true);
@@ -203,15 +280,12 @@ export default function HomePage() {
 
   // 3. 为新按钮创建一个新的处理函数
   const handleRandomGenerate = () => {
-    // 从单词列表中随机选5个
     const shuffled = [...commonWords].sort(() => 0.5 - Math.random());
     const selectedWords = shuffled.slice(0, 5);
-
-    // 将单词数组转换成逗号分隔的字符串
     const selectedWordsString = selectedWords.join(", ");
-    // <-- 新增：用随机生成的单词字符串来更新输入框的状态
+
     setWords(selectedWordsString);
-    // 使用随机选出的单词字符串，调用我们的核心生成函数
+
     handleGenerate(selectedWordsString);
   };
 
@@ -229,7 +303,7 @@ export default function HomePage() {
             </span>
           </div>
           <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            AI将根据你输入的单词自动生成有趣的故事和阅读理解题，让学习充满乐趣！
+            AI生成有趣的故事和阅读理解题，让学习充满乐趣！
           </p>
         </div>
 
@@ -237,74 +311,52 @@ export default function HomePage() {
         <section className="mb-16">
           <Card className="backdrop-blur-lg bg-white/70 dark:bg-slate-800/70 border border-white/20 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 group">
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <Brain className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                    输入至少一个单词
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    输入你想在文章中出现的英语单词，以空格分隔
-                  </p>
-                </div>
-              </div>
+              <div className="space-y-4 px-4">
+                <Button
+                  onClick={handleRandomGenerate}
+                  disabled={loading}
+                  className={`${
+                    isBouncing ? "animate-custom-bounce" : ""
+                  } bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 mx-auto w-72 h-12 flex items-center justify-center`}
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      AI生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Siren className="w-5 h-5 mr-2" />
+                      点我随机生成
+                    </>
+                  )}
+                </Button>
 
-              <div className="space-y-4">
                 <Textarea
                   value={words}
                   onChange={(e) => setWords(e.target.value)}
-                  placeholder="例如：dog, sunny, friend, happy, school..."
-                  className="min-h-[100px] text-base resize-none"
+                  placeholder="输入指定单词，如：dog, sunny, friend, happy, school..."
+                  className="min-h-[60px] text-base resize-none"
                   disabled={loading}
                 />
 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={() => handleGenerate(words)}
-                    disabled={loading}
-                    className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        AI生成中...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5 mr-2" />
-                        开启AI阅读
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={handleRandomGenerate}
-                    disabled={loading}
-                    // 给一个不同的样式来区分
-                    className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-medium py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-                  >
-                    {/* 这里我们不需要复杂的加载状态，因为它很快 */}
+                <Button
+                  onClick={() => handleGenerate(words)}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 mx-auto block w-72 h-12 flex items-center justify-center"
+                >
+                  {loading ? (
                     <>
-                      {/* 你可以换一个不同的图标 */}
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="mr-2"
-                      >
-                        <path d="M16 4h2a2 2 0 0 1 2 2v2M12 4V2M8 4H6a2 2 0 0 0-2 2v2M4 12H2M20 12h2M12 20v2M4 16v2a2 2 0 0 0 2 2h2M20 16v2a2 2 0 0 1-2 2h-2M12 8a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4Z" />
-                      </svg>
-                      随机灵感
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      AI生成中...
                     </>
-                  </Button>
-                </div>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      自定义生成
+                    </>
+                  )}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -593,6 +645,36 @@ export default function HomePage() {
             </Card>
           </div>
         )}
+
+        {/* Login Modal for Guest Users */}
+        <Dialog open={showLoginModal} onOpenChange={handleModalClose}>
+          <DialogContent>
+            <DialogHeader className="flex flex-col items-center">
+              <DialogTitle>答题完成！</DialogTitle>
+              <DialogDescription>
+                您的得分是 {guestScore} / 100 分
+              </DialogDescription>
+            </DialogHeader>
+            <div className="text-center py-4">
+              <p className="text-muted-foreground mb-4">
+                登录后可以保存您的成绩并查看详细统计数据
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleModalClose}>
+                稍后登录
+              </Button>
+              <Button
+                onClick={() => {
+                  handleModalClose();
+                  router.push("/login");
+                }}
+              >
+                立即登录
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Confetti Effect */}
         {showConfetti && (
