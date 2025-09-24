@@ -95,7 +95,7 @@ export default function Dashboard() {
   return (
     <>
       <AppHeader />
-      <div className="px-48 py-6 space-y-8">
+      <div className="px-12 py-6 space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold py-1 mb-2">
             <span className="bg-gradient-to-r from-emerald-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">

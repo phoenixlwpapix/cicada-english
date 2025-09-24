@@ -74,6 +74,10 @@ Answer: A
     );
 
     console.log("[API] Gemini API response status:", response.status);
+    console.log(
+      "[API] Response headers:",
+      Object.fromEntries(response.headers.entries())
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -100,7 +104,65 @@ Answer: A
       );
     }
 
-    const data = await response.json();
+    // Check content type before parsing JSON
+    const contentType = response.headers.get("content-type");
+    console.log("[API] Response content type:", contentType);
+
+    if (!contentType || !contentType.includes("application/json")) {
+      const textContent = await response.text();
+      console.error("[API] Unexpected content type:", contentType);
+      console.error(
+        "[API] Response content preview:",
+        textContent.substring(0, 200)
+      );
+
+      // Check if it's an HTML error page
+      if (textContent.trim().startsWith("<") || textContent.includes("<html")) {
+        return NextResponse.json(
+          {
+            error: "AI 服务暂时不可用，请稍后重试",
+            details: "收到 HTML 错误页面而不是预期的 JSON 响应",
+            technicalError: `Content-Type: ${contentType}, Response starts with: ${textContent.substring(
+              0,
+              50
+            )}...`,
+          },
+          { status: 502 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          error: "AI 服务返回格式错误",
+          details: `意外的内容类型: ${contentType}`,
+          technicalError: textContent.substring(0, 200),
+        },
+        { status: 502 }
+      );
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error("[API] JSON parse error:", parseError);
+      const textContent = await response.text();
+      console.error(
+        "[API] Raw response content:",
+        textContent.substring(0, 200)
+      );
+
+      return NextResponse.json(
+        {
+          error: "AI 服务返回的数据格式错误",
+          details: "无法解析 JSON 响应",
+          technicalError: `Parse error: ${
+            parseError.message
+          }, Content preview: ${textContent.substring(0, 100)}...`,
+        },
+        { status: 502 }
+      );
+    }
     console.log(
       "[API] Gemini API response data:",
       JSON.stringify(data, null, 2)

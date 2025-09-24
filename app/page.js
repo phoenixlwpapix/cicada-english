@@ -100,12 +100,18 @@ export default function HomePage() {
     }
   }, [loading]);
 
-  const handleGenerate = async (wordsToUse) => {
+  const handleGenerate = async (wordsToUse, retryCount = 0) => {
+    const maxRetries = 2;
     setLoading(true);
     setScore(null);
     setStory("");
     setQuestions("");
-    console.log("[Frontend] Starting generation with words:", wordsToUse);
+    console.log(
+      "[Frontend] Starting generation with words:",
+      wordsToUse,
+      "Retry:",
+      retryCount
+    );
 
     try {
       const wordsArray = wordsToUse
@@ -129,11 +135,61 @@ export default function HomePage() {
       });
 
       console.log("[Frontend] API response status:", res.status);
-      const data = await res.json();
-      console.log("[Frontend] API response data:", data);
+
+      let data;
+      try {
+        data = await res.json();
+        console.log("[Frontend] API response data:", data);
+      } catch (parseError) {
+        console.error("[Frontend] JSON parse error:", parseError);
+        const textResponse = await res.text();
+        console.error(
+          "[Frontend] Raw response:",
+          textResponse.substring(0, 200)
+        );
+
+        // If it's a JSON parse error and we haven't exceeded retries, try again
+        if (retryCount < maxRetries) {
+          console.log(
+            `[Frontend] Retrying request (attempt ${
+              retryCount + 1
+            }/${maxRetries})`
+          );
+          setTimeout(
+            () => handleGenerate(wordsToUse, retryCount + 1),
+            1000 * (retryCount + 1)
+          );
+          return;
+        }
+
+        alert(`网络请求错误: 服务器返回了无效的响应格式，请稍后重试`);
+        return;
+      }
 
       if (!res.ok) {
         console.error("[Frontend] API error:", data);
+
+        // Check for specific error types that might benefit from retry
+        const isRetryableError =
+          data.error?.includes("暂时不可用") ||
+          data.error?.includes("服务返回格式错误") ||
+          res.status === 502 ||
+          res.status === 503 ||
+          res.status === 504;
+
+        if (isRetryableError && retryCount < maxRetries) {
+          console.log(
+            `[Frontend] Retrying due to retryable error (attempt ${
+              retryCount + 1
+            }/${maxRetries})`
+          );
+          setTimeout(
+            () => handleGenerate(wordsToUse, retryCount + 1),
+            2000 * (retryCount + 1)
+          );
+          return;
+        }
+
         alert(`生成失败: ${data.error || "未知错误"}`);
         return;
       }
@@ -231,6 +287,24 @@ export default function HomePage() {
       setCurrentQuestion(0);
     } catch (err) {
       console.error("[Frontend] Error fetching from Gemini API:", err);
+
+      // Check if this is a network error that might benefit from retry
+      const isNetworkError =
+        err.name === "TypeError" || err.message.includes("fetch");
+
+      if (isNetworkError && retryCount < maxRetries) {
+        console.log(
+          `[Frontend] Retrying due to network error (attempt ${
+            retryCount + 1
+          }/${maxRetries})`
+        );
+        setTimeout(
+          () => handleGenerate(wordsToUse, retryCount + 1),
+          2000 * (retryCount + 1)
+        );
+        return;
+      }
+
       alert(`网络请求错误: ${err.message || "请检查网络连接"}`);
     } finally {
       setLoading(false);
@@ -335,7 +409,7 @@ export default function HomePage() {
                 <Textarea
                   value={words}
                   onChange={(e) => setWords(e.target.value)}
-                  placeholder="输入指定单词，如：dog, sunny, friend, happy, school..."
+                  placeholder="或输入指定单词，如：dog, sunny, friend, happy, school..."
                   className="min-h-[60px] text-base resize-none"
                   disabled={loading}
                 />
