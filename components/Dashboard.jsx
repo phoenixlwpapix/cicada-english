@@ -215,36 +215,68 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {leaderboard && leaderboard.length > 0 ? (
-              <div className="space-y-2">
-                {leaderboard.map((entry, index) => (
-                  <div
-                    key={entry.email}
-                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                          index === 0
-                            ? "bg-yellow-500 text-white"
-                            : index === 1
-                            ? "bg-gray-400 text-white"
-                            : index === 2
-                            ? "bg-amber-600 text-white"
-                            : "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300"
-                        }`}
-                      >
-                        {index + 1}
+              <>
+                <div className="space-y-2">
+                  {leaderboard.map((entry, index) => (
+                    <div
+                      key={entry.email}
+                      className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            index === 0
+                              ? "bg-yellow-500 text-white"
+                              : index === 1
+                              ? "bg-gray-400 text-white"
+                              : index === 2
+                              ? "bg-amber-600 text-white"
+                              : "bg-slate-300 dark:bg-slate-600 text-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <span className="font-medium text-slate-900 dark:text-slate-100">
+                          {entry.email}
+                        </span>
                       </div>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">
-                        {entry.email}
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        {entry.totalScore} 分
                       </span>
                     </div>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">
-                      {entry.totalScore} 分
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <div className="mt-6">
+                  <ChartContainer config={chartConfig}>
+                    <BarChart
+                      layout="vertical"
+                      data={leaderboard.map((entry) => ({
+                        user: entry.email,
+                        score: entry.totalScore,
+                      }))}
+                      height={300}
+                      margin={{
+                        left: 12,
+                        right: 12,
+                        top: 12,
+                        bottom: 12,
+                      }}
+                    >
+                      <XAxis type="number" dataKey="score" />
+                      <YAxis dataKey="user" type="category" width={100} />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent />}
+                      />
+                      <Bar
+                        dataKey="score"
+                        fill="var(--color-score)"
+                        radius={4}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              </>
             ) : (
               <p className="text-center text-slate-500 dark:text-slate-400 py-4">
                 暂无数据
