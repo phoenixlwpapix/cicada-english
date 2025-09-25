@@ -1,25 +1,24 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cva } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 relative overflow-hidden",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 relative overflow-hidden",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:from-blue-700 hover:to-purple-700 hover:shadow-xl transform hover:scale-105 active:scale-95",
+          "bg-secondary text-background shadow-lg hover:bg-secondary/90 hover:shadow-xl transform hover:scale-105 active:scale-95",
         destructive:
-          "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:from-red-600 hover:to-pink-600 hover:shadow-xl transform hover:scale-105 active:scale-95",
+          "bg-destructive text-destructive-foreground shadow-lg hover:bg-destructive/90 hover:shadow-xl transform hover:scale-105 active:scale-95",
         outline:
-          "border-2 border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95",
+          "border-2 border-border bg-transparent hover:bg-muted text-foreground shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95",
         secondary:
-          "bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-800 dark:text-slate-200 shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95",
-        ghost:
-          "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl",
-        link: "text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground shadow-sm hover:shadow-md transform hover:scale-105 active:scale-95",
+        ghost: "hover:bg-muted text-foreground rounded-xl",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -33,23 +32,18 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
+);
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}) {
-  const Comp = asChild ? Slot : "button"
+function Button({ className, variant, size, asChild = false, ...props }) {
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

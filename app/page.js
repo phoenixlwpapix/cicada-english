@@ -370,41 +370,41 @@ export default function HomePage() {
       <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Hero section */}
         <div className="text-center mb-16 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-100 to-cyan-100 dark:from-emerald-900/50 dark:to-cyan-900/50 rounded-full mb-6">
-            <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-lg font-medium text-emerald-700 dark:text-emerald-300">
-              知了英语AI阅读训练
-            </span>
+          <div className="flex flex-col items-center gap-4">
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10">
+              <BookOpen className="w-8 h-8 text-primary dark:text-primary" />
+              <h1 className="text-2xl font-bold text-primary">
+                AI生成有趣的故事和阅读理解题，快来挑战吧！
+              </h1>
+            </div>
           </div>
-          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            AI生成有趣的故事和阅读理解题，让学习充满乐趣！
-          </p>
         </div>
 
         {/* 单词输入卡片 */}
         <section className="mb-16">
-          <Card className="backdrop-blur-lg bg-white/70 dark:bg-slate-800/70 border border-white/20 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+          <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group">
             <CardContent className="space-y-6">
               <div className="space-y-4 px-4">
-                <Button
-                  onClick={handleRandomGenerate}
-                  disabled={loading}
-                  className={`${
-                    isBouncing ? "animate-custom-bounce" : ""
-                  } bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 mx-auto w-72 h-12 flex items-center justify-center`}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      AI生成中...
-                    </>
-                  ) : (
-                    <>
-                      <Siren className="w-5 h-5 mr-2" />
-                      点我随机生成
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleRandomGenerate}
+                    disabled={loading}
+                    className="font-bold text-base"
+                    style={{ backgroundColor: "var(--secondary2)" }}
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        AI生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Siren className="w-5 h-5 mr-2" />
+                        点我随机生成
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 <Textarea
                   value={words}
@@ -414,23 +414,25 @@ export default function HomePage() {
                   disabled={loading}
                 />
 
-                <Button
-                  onClick={() => handleGenerate(words)}
-                  disabled={loading}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 mx-auto block w-72 h-12 flex items-center justify-center"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      AI生成中...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 mr-2" />
-                      自定义生成
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => handleGenerate(words)}
+                    disabled={loading}
+                    className="font-bold text-base"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        AI生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        指定单词生成
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -441,24 +443,24 @@ export default function HomePage() {
           <section className="mb-16">
             <Card
               ref={storyRef}
-              className="backdrop-blur-lg bg-white/70 dark:bg-slate-800/70 border border-white/20 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
+              className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
             >
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-3 rounded-xl bg-secondary text-primary-foreground shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                    <h2 className="text-xl font-bold text-card-foreground">
                       阅读文章
                     </h2>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                       仔细阅读下面的故事
                     </p>
                   </div>
                 </div>
 
-                <div className="text-lg bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
+                <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -493,25 +495,25 @@ export default function HomePage() {
         {/* 题目卡片 */}
         {questions.length > 0 && (
           <div className="mt-12">
-            <Card className="backdrop-blur-lg bg-white/70 dark:bg-slate-800/70 border border-white/20 dark:border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up">
+            <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up">
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <div className="p-3 rounded-xl bg-secondary text-primary-foreground shadow-lg group-hover:scale-110 transition-transform duration-300">
                       <Brain className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                      <h2 className="text-xl font-bold text-card-foreground">
                         阅读理解题
                       </h2>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <p className="text-sm text-muted-foreground">
                         测试你的理解能力
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700 rounded-lg px-3 py-2">
-                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                    <span className="text-sm font-medium text-muted-foreground">
                       {currentQuestion + 1} / {questions.length}
                     </span>
                   </div>
@@ -520,10 +522,9 @@ export default function HomePage() {
                 {/* Navigation */}
                 <div className="flex items-center justify-center gap-4">
                   <Button
-                    variant="outline"
                     disabled={currentQuestion === 0}
                     onClick={() => setCurrentQuestion(currentQuestion - 1)}
-                    className="rounded-xl bg-white/50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700"
+                    className="font-bold text-base"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     上一题
@@ -536,18 +537,17 @@ export default function HomePage() {
                         onClick={() => setCurrentQuestion(index)}
                         className={`w-3 h-3 rounded-full transition-all duration-200 ${
                           index === currentQuestion
-                            ? "bg-gradient-to-r from-purple-500 to-pink-500 scale-125"
-                            : "bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500"
+                            ? "bg-primary scale-125"
+                            : "bg-muted hover:bg-muted/80"
                         }`}
                       />
                     ))}
                   </div>
 
                   <Button
-                    variant="outline"
                     disabled={currentQuestion === questions.length - 1}
                     onClick={() => setCurrentQuestion(currentQuestion + 1)}
-                    className="rounded-xl bg-white/50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-700"
+                    className="font-bold text-base"
                   >
                     下一题
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -555,8 +555,8 @@ export default function HomePage() {
                 </div>
 
                 {/* Question */}
-                <div className="bg-gradient-to-br from-slate-50 to-purple-50 dark:from-slate-700 dark:to-purple-900/20 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50">
-                  <p className="text-lg font-medium text-slate-800 dark:text-slate-100 mb-6">
+                <div className="bg-muted rounded-xl p-6 border border-border/50">
+                  <p className="text-lg font-medium text-card-foreground mb-6">
                     {questions[currentQuestion]}
                   </p>
                   <div className="space-y-3">
@@ -596,8 +596,8 @@ export default function HomePage() {
                             <div
                               className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold ${
                                 isSelected
-                                  ? "bg-purple-500 border-purple-500 text-white"
-                                  : "border-slate-300 dark:border-slate-500 text-slate-500 dark:text-slate-400"
+                                  ? "bg-secondary border-secondary text-primary-foreground"
+                                  : "border-border text-muted-foreground"
                               }`}
                             >
                               {letters[i]}
@@ -650,55 +650,57 @@ export default function HomePage() {
                 </div>
 
                 {/* Submit and Results Section */}
-                <div className="border-t border-slate-200 dark:border-slate-600 pt-6">
+                <div className="border-t border-border pt-6">
                   {userAnswers.every((answer) => answer !== "") &&
                     score === null && (
-                      <Button
-                        onClick={handleSubmit}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-medium py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                      >
-                        <Brain className="w-5 h-5 mr-2" />
-                        提交答案
-                      </Button>
+                      <div className="flex justify-center">
+                        <Button
+                          onClick={handleSubmit}
+                          className="font-bold text-base"
+                        >
+                          <Brain className="w-5 h-5 mr-2" />
+                          提交答案
+                        </Button>
+                      </div>
                     )}
 
                   {score !== null && (
                     <div className="space-y-4">
-                      <div className="text-center p-6 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200/50 dark:border-blue-700/50">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white mb-4">
+                      <div className="text-center p-6 rounded-xl bg-muted border border-border/50">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-secondary text-primary-foreground mb-4">
                           <Sparkles className="w-8 h-8" />
                         </div>
 
-                        <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+                        <h3 className="text-2xl font-bold text-card-foreground mb-2">
                           你的得分：{score} / 100
                         </h3>
 
                         <div className="text-lg">
                           {score === 100 && (
-                            <p className="text-green-600 dark:text-green-400 font-semibold flex items-center justify-center gap-2">
+                            <p className="text-green-600 dark:text-green-300 font-semibold flex items-center justify-center gap-2">
                               🎉 完美无瑕！你是英语小能手！
                             </p>
                           )}
                           {score >= 80 && score < 100 && (
-                            <p className="text-blue-600 dark:text-blue-400 font-semibold">
+                            <p className="text-blue-600 dark:text-blue-300 font-semibold">
                               🎆 太棒了！继续加油！
                             </p>
                           )}
                           {score >= 60 && score < 80 && (
-                            <p className="text-yellow-600 dark:text-yellow-400 font-semibold">
+                            <p className="text-yellow-600 dark:text-yellow-300 font-semibold">
                               😊 不错哦！再努力一点就更好了！
                             </p>
                           )}
                           {score < 60 && (
-                            <p className="text-orange-600 dark:text-orange-400 font-semibold">
+                            <p className="text-orange-600 dark:text-orange-300 font-semibold">
                               💪 加油！练习使人进步！
                             </p>
                           )}
                         </div>
 
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 mt-4">
+                        <div className="w-full bg-muted rounded-full h-3 mt-4">
                           <div
-                            className="h-3 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-1000 ease-out"
+                            className="h-3 rounded-full bg-accent transition-all duration-1000 ease-out"
                             style={{ width: `${score}%` }}
                           ></div>
                         </div>
@@ -706,10 +708,10 @@ export default function HomePage() {
                       <div className="flex justify-center">
                         <Button
                           onClick={handleRandomGenerate}
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-medium py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                          className="font-bold text-base"
                         >
                           <Sparkles className="w-5 h-5 mr-2" />
-                          生成新的学习内容
+                          再来一篇
                         </Button>
                       </div>
                     </div>
