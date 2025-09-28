@@ -70,7 +70,7 @@ export default function AppHeader() {
             <Link href="/">
               <div className="cursor-pointer">
                 <img
-                  src="/banner.png"
+                  src="/banner-new.png"
                   alt="知了英语"
                   className="h-8 md:h-12 lg:h-16 py-1 hover:opacity-80 transition-opacity duration-300"
                 />
