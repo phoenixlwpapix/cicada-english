@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Sun, Moon, User, LogOut } from "lucide-react";
+import { Sun, Moon, User, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -69,11 +69,12 @@ export default function AppHeader() {
             </div>
             <Link href="/">
               <div className="cursor-pointer">
-                <h1 className="text-2xl md:text-3xl font-bold text-primary py-1">
-                  知了英语
-                </h1>
-                <p className="text-sm text-primary flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-secondary2" />
+                <img
+                  src="/banner.png"
+                  alt="知了英语"
+                  className="h-8 md:h-12 lg:h-16 py-1 hover:opacity-80 transition-opacity duration-300"
+                />
+                <p className="text-sm text-primary flex items-center justify-center gap-2">
                   AI阅读训练
                 </p>
               </div>
