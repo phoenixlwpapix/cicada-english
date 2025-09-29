@@ -8,10 +8,18 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { words } = body;
+    const { words, difficulty = "A1", length = 300, name, category } = body;
 
     console.log("[API] Request body:", body);
     console.log("[API] Words received:", words);
+    console.log("[API] Difficulty:", difficulty);
+    console.log("[API] Length:", length);
+    console.log("[API] Name:", name);
+    console.log("[API] Category:", category);
+
+    // Use provided name and category, or default if not provided
+    const selectedName = name || "Alex";
+    const selectedCategory = category || "日常";
 
     if (!words || !Array.isArray(words) || words.length === 0) {
       console.error("[API] Invalid words input:", words);
@@ -29,10 +37,19 @@ export async function POST(req) {
       );
     }
 
+    const difficultyDesc = {
+      A1: "非常基础，简单词汇和句子，适合初学者",
+      A2: "基础水平，常见词汇和简单句型",
+      B1: "中级水平，更多词汇和句型",
+      B2: "中高级水平，复杂词汇和句型",
+    };
+
     const prompt = `
-你是一名面向中国六年级小学生的英语阅读教师。请根据给定的单词编写一篇约220词的英语短文。随后设计5道英文阅读理解单选题：
-人名要求：主人公名字从以下名字中任选（男生名 Liam, Noah, Oliver. James, Elijah, William, Henry, Lucas, Theodore 和 Mateo；女生名 Emma, Olivia, Sophia, Charlotte. Amelia, Isabella, Evelyn, Ava, Mia 和 Luna.）
-文章要求：内容贴近小学生生活，语言清晰简洁，难度不超过KET水平。文章标题用二号标题(##)。
+你是一名面向中国中小学生的英语阅读教师。请根据给定的单词编写一篇约${length}词的英语短文。随后设计5道英文阅读理解单选题：
+
+文章要求：主人公名字为${selectedName}。内容语言清晰简洁，难度为CEFR ${difficulty}水平 (${
+      difficultyDesc[difficulty]
+    })，类别为${selectedCategory}。文章标题用二号标题(##)。
 出题要求：每题提供 A/B/C 三个选项；明确标注正确答案；正确答案在 A、B、C 中分布均衡，不集中在同一个选项。
 
 单词列表：${words.join(", ")}。

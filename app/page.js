@@ -41,6 +41,8 @@ export default function HomePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [difficulty, setDifficulty] = useState("A2");
+  const [length, setLength] = useState(300);
 
   const { width, height } = useWindowSize();
   const { user } = useAuth();
@@ -100,7 +102,14 @@ export default function HomePage() {
     }
   }, [loading]);
 
-  const handleGenerate = async (wordsToUse, retryCount = 0) => {
+  const handleGenerate = async (
+    wordsToUse,
+    selectedDifficulty = difficulty,
+    selectedLength = length,
+    selectedName,
+    selectedCategory,
+    retryCount = 0
+  ) => {
     const maxRetries = 2;
     setLoading(true);
     setScore(null);
@@ -109,6 +118,14 @@ export default function HomePage() {
     console.log(
       "[Frontend] Starting generation with words:",
       wordsToUse,
+      "Difficulty:",
+      selectedDifficulty,
+      "Length:",
+      selectedLength,
+      "Name:",
+      selectedName,
+      "Category:",
+      selectedCategory,
       "Retry:",
       retryCount
     );
@@ -118,7 +135,6 @@ export default function HomePage() {
         .split(",")
         .map((w) => w.trim())
         .filter((w) => w.length > 0);
-      console.log("[Frontend] Processed words array:", wordsArray);
 
       if (wordsArray.length === 0) {
         alert("请输入至少一个单词！");
@@ -131,7 +147,13 @@ export default function HomePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ words: wordsArray }),
+        body: JSON.stringify({
+          words: wordsArray,
+          difficulty: selectedDifficulty,
+          length: selectedLength,
+          name: selectedName,
+          category: selectedCategory,
+        }),
       });
 
       console.log("[Frontend] API response status:", res.status);
@@ -205,13 +227,14 @@ export default function HomePage() {
       console.log("[Frontend] Raw result from API:", result);
 
       // 简单地解析结果（更好的做法是根据返回格式再细化）
-      const storyMatch = result.match(/Story:\s*([\s\S]*?)\nQuestions:/i);
+      // 查找故事部分：从##开始到Questions:结束
+      const storyMatch = result.match(/##[\s\S]*?(?=Questions:)/i);
       const questionsBlock = result.match(/Questions:\s*([\s\S]*)/i);
 
       console.log("[Frontend] Story match:", storyMatch);
       console.log("[Frontend] Questions block:", questionsBlock);
 
-      const parsedStory = storyMatch ? storyMatch[1].trim() : "";
+      const parsedStory = storyMatch ? storyMatch[0].trim() : "";
       const parsedQuestions = [];
       const parsedOptions = [];
       const parsedAnswers = [];
@@ -358,9 +381,47 @@ export default function HomePage() {
     const selectedWords = shuffled.slice(0, 5);
     const selectedWordsString = selectedWords.join(", ");
 
+    // Randomly select name and category
+    const boyNames = [
+      "Liam",
+      "Noah",
+      "Oliver",
+      "James",
+      "Elijah",
+      "William",
+      "Henry",
+      "Lucas",
+      "Theodore",
+      "Mateo",
+    ];
+    const girlNames = [
+      "Emma",
+      "Olivia",
+      "Sophia",
+      "Charlotte",
+      "Amelia",
+      "Isabella",
+      "Evelyn",
+      "Ava",
+      "Mia",
+      "Luna",
+    ];
+    const allNames = [...boyNames, ...girlNames];
+    const selectedName = allNames[Math.floor(Math.random() * allNames.length)];
+
+    const categories = ["科幻", "冒险", "日常", "童话", "寓言", "科普"];
+    const selectedCategory =
+      categories[Math.floor(Math.random() * categories.length)];
+
     setWords(selectedWordsString);
 
-    handleGenerate(selectedWordsString);
+    handleGenerate(
+      selectedWordsString,
+      difficulty,
+      length,
+      selectedName,
+      selectedCategory
+    );
   };
 
   return (
@@ -374,7 +435,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10">
               <BookOpen className="w-8 h-8 text-primary dark:text-primary" />
               <h1 className="text-2xl font-bold text-primary">
-                AI生成有趣的故事和阅读理解题，快来挑战吧！
+                AI生成有趣的故事和阅读理解题
               </h1>
             </div>
           </div>
@@ -385,6 +446,45 @@ export default function HomePage() {
           <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group">
             <CardContent className="space-y-6">
               <div className="space-y-4 px-4">
+                <div className="space-y-4">
+                  {/* 难度选项 */}
+                  <div className="flex items-center justify-center gap-2 bg-muted/50 rounded-lg p-3">
+                    <span className="text-lg font-medium text-primary/90 mr-2">
+                      文章难度:
+                    </span>
+                    {["A1", "A2", "B1", "B2"].map((level) => (
+                      <Button
+                        key={level}
+                        variant={difficulty === level ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setDifficulty(level)}
+                        disabled={loading}
+                        className="transition-all duration-200 hover:scale-105"
+                      >
+                        {level}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* 长度选项 */}
+                  <div className="flex items-center justify-center gap-4 bg-muted/50 rounded-lg p-3">
+                    <span className="text-lg font-medium text-primary/90">
+                      文章长度:
+                    </span>
+                    <input
+                      type="range"
+                      min="200"
+                      max="400"
+                      step="50"
+                      value={length}
+                      onChange={(e) => setLength(Number(e.target.value))}
+                      disabled={loading}
+                      className="w-48 accent-primary/80"
+                    />
+                    <span>{length} 字</span>
+                  </div>
+                </div>
+
                 <div className="flex justify-center">
                   <Button
                     onClick={handleRandomGenerate}
@@ -405,41 +505,13 @@ export default function HomePage() {
                     )}
                   </Button>
                 </div>
-
-                <Textarea
-                  value={words}
-                  onChange={(e) => setWords(e.target.value)}
-                  placeholder="或输入指定单词，如：dog, sunny, friend, happy, school..."
-                  className="min-h-[60px] text-base resize-none"
-                  disabled={loading}
-                />
-
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => handleGenerate(words)}
-                    disabled={loading}
-                    className="font-bold text-base"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        AI生成中...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5 mr-2" />
-                        指定单词生成
-                      </>
-                    )}
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
         </section>
 
         {/* 文章卡片 */}
-        {story && (
+        {(story || loading) && (
           <section className="mb-16">
             <Card
               ref={storyRef}
@@ -455,37 +527,46 @@ export default function HomePage() {
                       阅读文章
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      仔细阅读下面的故事
+                      {loading ? "AI正在生成精彩故事..." : "仔细阅读下面的故事"}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ node, ...props }) => (
-                        <p className="mt-4" {...props} />
-                      ),
-                      h1: ({ node, ...props }) => (
-                        <h1
-                          className="text-2xl font-bold mt-6 mb-4"
-                          {...props}
-                        />
-                      ),
-                      h2: ({ node, ...props }) => (
-                        <h2
-                          className="text-xl font-semibold mt-5 mb-3"
-                          {...props}
-                        />
-                      ),
-                      li: ({ node, ...props }) => (
-                        <li className="ml-6 list-disc" {...props} />
-                      ),
-                    }}
-                  >
-                    {story}
-                  </ReactMarkdown>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
+                      <span className="text-muted-foreground">
+                        AI正在创作精彩的故事，请稍候...
+                      </span>
+                    </div>
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ node, ...props }) => (
+                          <p className="mt-4" {...props} />
+                        ),
+                        h1: ({ node, ...props }) => (
+                          <h1
+                            className="text-2xl font-bold mt-6 mb-4"
+                            {...props}
+                          />
+                        ),
+                        h2: ({ node, ...props }) => (
+                          <h2
+                            className="text-xl font-semibold mt-5 mb-3"
+                            {...props}
+                          />
+                        ),
+                        li: ({ node, ...props }) => (
+                          <li className="ml-6 list-disc" {...props} />
+                        ),
+                      }}
+                    >
+                      {story}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </CardContent>
             </Card>
