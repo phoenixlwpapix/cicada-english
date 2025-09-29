@@ -72,9 +72,9 @@ export default function AppHeader() {
                 <img
                   src="/banner-new.png"
                   alt="知了英语"
-                  className="h-8 md:h-12 lg:h-16 py-1 hover:opacity-80 transition-opacity duration-300"
+                  className="h-10 sm:h-8 md:h-12 lg:h-16 py-1 hover:opacity-80 transition-opacity duration-300"
                 />
-                <p className="text-sm text-primary flex items-center justify-center gap-2">
+                <p className="text-xs sm:text-sm text-primary flex items-center justify-center gap-2">
                   AI阅读训练
                 </p>
               </div>

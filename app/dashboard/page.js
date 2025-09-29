@@ -128,7 +128,7 @@ export default function DashboardPage() {
   return (
     <>
       <AppHeader />
-      <div className="px-12 py-6 space-y-8">
+      <div className="px-4 sm:px-12 lg:px-24 py-6 space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold py-1 mb-2">
             <span className="text-primary">
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Statistics Cards - Left Column */}
           <div className="flex flex-col gap-6 h-full">
             <Card className="flex-1">
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 overflow-hidden">
+              <CardContent className="flex-1 overflow-hidden px-2 sm:px-6">
                 <ChartContainer config={chartConfig}>
                   <BarChart
                     accessibilityLayer

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import AppHeader from "@/components/AppHeader";
 import { commonWords } from "@/lib/words"; // 1. 引入你的单词列表
-import { processQuizSubmission, migrateLegacyData } from "@/lib/quiz-data";
+import { processQuizSubmission } from "@/lib/quiz-data";
 import {
   ArrowLeft,
   ArrowRight,
@@ -30,6 +30,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { generatePortrait, base64ToBlobUrl } from "@/lib/image-generator";
+import { Image as ImageIcon } from "lucide-react";
 
 export default function HomePage() {
   const [words, setWords] = useState("");
@@ -42,7 +44,13 @@ export default function HomePage() {
   const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const [difficulty, setDifficulty] = useState("A2");
-  const [length, setLength] = useState(300);
+  const [length, setLength] = useState(200);
+
+  // Image generation states
+  const [generatedImage, setGeneratedImage] = useState(null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState(null);
+  const [imagePrompt, setImagePrompt] = useState("");
 
   const { width, height } = useWindowSize();
   const { user } = useAuth();
@@ -90,17 +98,59 @@ export default function HomePage() {
     }
   }, [story]); // 依赖项数组是关键，这个 effect 只在 `story` 状态改变时运行
 
-  // Migrate legacy data on component mount
-  useEffect(() => {
-    migrateLegacyData();
-  }, []);
-
   // Stop bouncing animation when generation starts
   useEffect(() => {
     if (loading) {
       setIsBouncing(false);
     }
   }, [loading]);
+
+  // Clear all content when user logs out
+  useEffect(() => {
+    if (user === null) {
+      setStory("");
+      setQuestions([]);
+      setOptions([]);
+      setAnswers([]);
+      setUserAnswers([]);
+      setCurrentQuestion(0);
+      setScore(null);
+      setGeneratedImage(null);
+      setImageLoading(false);
+      setImageError(null);
+      setImagePrompt("");
+    }
+  }, [user]);
+
+  // Generate image after story is successfully created (only for logged-in users)
+  useEffect(() => {
+    if (
+      user &&
+      story &&
+      !loading &&
+      !generatedImage &&
+      !imageLoading &&
+      !imageError
+    ) {
+      if (imagePrompt) {
+        console.log(
+          "[Image Generation] Using extracted ImagePrompt:",
+          imagePrompt
+        );
+        generateImage(imagePrompt);
+      } else {
+        // Fallback to using story content if no ImagePrompt is found
+        const fallbackPrompt = `Create a child-friendly educational illustration for this story: "${story
+          .replace(/ImagePrompt:[\s\S]*/, "")
+          .trim()}"`;
+        console.log(
+          "[Image Generation] No ImagePrompt found, using fallback:",
+          fallbackPrompt
+        );
+        generateImage(fallbackPrompt);
+      }
+    }
+  }, [user, story, loading, imagePrompt]);
 
   const handleGenerate = async (
     wordsToUse,
@@ -115,6 +165,9 @@ export default function HomePage() {
     setScore(null);
     setStory("");
     setQuestions("");
+    setGeneratedImage(null);
+    setImageError(null);
+    setImagePrompt("");
     console.log(
       "[Frontend] Starting generation with words:",
       wordsToUse,
@@ -226,18 +279,25 @@ export default function HomePage() {
 
       console.log("[Frontend] Raw result from API:", result);
 
-      // 简单地解析结果（更好的做法是根据返回格式再细化）
+      // 解析结果，提取故事、题目和图像提示
       // 查找故事部分：从##开始到Questions:结束
       const storyMatch = result.match(/##[\s\S]*?(?=Questions:)/i);
-      const questionsBlock = result.match(/Questions:\s*([\s\S]*)/i);
+      const questionsBlock = result.match(
+        /Questions:\s*([\s\S]*?)(?=ImagePrompt:)/i
+      );
+      const imagePromptMatch = result.match(/ImagePrompt:\s*([\s\S]*)/i);
 
       console.log("[Frontend] Story match:", storyMatch);
       console.log("[Frontend] Questions block:", questionsBlock);
+      console.log("[Frontend] ImagePrompt match:", imagePromptMatch);
 
       const parsedStory = storyMatch ? storyMatch[0].trim() : "";
       const parsedQuestions = [];
       const parsedOptions = [];
       const parsedAnswers = [];
+      const parsedImagePrompt = imagePromptMatch
+        ? imagePromptMatch[1].trim()
+        : "";
 
       if (!storyMatch) {
         console.error("[Frontend] Could not parse story from result");
@@ -308,6 +368,7 @@ export default function HomePage() {
       setAnswers(parsedAnswers);
       setUserAnswers(Array(parsedQuestions.length).fill(""));
       setCurrentQuestion(0);
+      setImagePrompt(parsedImagePrompt);
     } catch (err) {
       console.error("[Frontend] Error fetching from Gemini API:", err);
 
@@ -372,6 +433,23 @@ export default function HomePage() {
     if (correct === questions.length) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000); // 5 秒后关闭动画
+    }
+  };
+
+  // Generate image using the provided ImagePrompt
+  const generateImage = async (imagePrompt) => {
+    setImageLoading(true);
+    setImageError(null);
+
+    try {
+      const imageData = await generatePortrait(imagePrompt);
+      const imageUrl = base64ToBlobUrl(imageData, "image/png");
+      setGeneratedImage(imageUrl);
+    } catch (error) {
+      console.error("Image generation failed:", error);
+      setImageError("图片生成失败，请重试");
+    } finally {
+      setImageLoading(false);
     }
   };
 
@@ -444,31 +522,37 @@ export default function HomePage() {
         {/* 单词输入卡片 */}
         <section className="mb-16">
           <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group">
-            <CardContent className="space-y-6">
-              <div className="space-y-4 px-4">
+            <CardContent className="space-y-4 px-3 sm:px-6 py-4 sm:py-6">
+              <div className="space-y-4 px-2 sm:px-4">
                 <div className="space-y-4">
                   {/* 难度选项 */}
-                  <div className="flex items-center justify-center gap-2 bg-muted/50 rounded-lg p-3">
-                    <span className="text-lg font-medium text-primary/90 mr-2">
-                      文章难度:
-                    </span>
-                    {["A1", "A2", "B1", "B2"].map((level) => (
-                      <Button
-                        key={level}
-                        variant={difficulty === level ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setDifficulty(level)}
-                        disabled={loading}
-                        className="transition-all duration-200 hover:scale-105"
-                      >
-                        {level}
-                      </Button>
-                    ))}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2 rounded-lg p-3">
+                      <span className="text-lg font-medium text-primary/90 mr-2">
+                        CEFR水平:
+                      </span>
+                      {["A1", "A2", "B1", "B2"].map((level) => (
+                        <Button
+                          key={level}
+                          variant={difficulty === level ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setDifficulty(level)}
+                          disabled={loading}
+                          className="transition-all duration-200 hover:scale-105"
+                        >
+                          {level}
+                        </Button>
+                      ))}
+                    </div>
+                    {/* 难度提示 */}
+                    <div className="text-center text-sm text-muted-foreground">
+                      A1:小学1-3年级 A2:小学4-6年级 B1:初中 B2:高中
+                    </div>
                   </div>
 
                   {/* 长度选项 */}
-                  <div className="flex items-center justify-center gap-4 bg-muted/50 rounded-lg p-3">
-                    <span className="text-lg font-medium text-primary/90">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 rounded-lg p-2 sm:p-3">
+                    <span className="text-base sm:text-lg font-medium text-primary/90">
                       文章长度:
                     </span>
                     <input
@@ -479,9 +563,9 @@ export default function HomePage() {
                       value={length}
                       onChange={(e) => setLength(Number(e.target.value))}
                       disabled={loading}
-                      className="w-48 accent-primary/80"
+                      className="w-48 sm:w-48 accent-primary/80"
                     />
-                    <span>{length} 字</span>
+                    <span className="text-sm sm:text-base">{length} 字</span>
                   </div>
                 </div>
 
@@ -511,7 +595,7 @@ export default function HomePage() {
         </section>
 
         {/* 文章卡片 */}
-        {(story || loading) && (
+        {(loading || story) && (
           <section className="mb-16">
             <Card
               ref={storyRef}
@@ -527,46 +611,112 @@ export default function HomePage() {
                       阅读文章
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      {loading ? "AI正在生成精彩故事..." : "仔细阅读下面的故事"}
+                      {loading
+                        ? "AI正在生成故事，请稍候..."
+                        : "仔细阅读下面的故事"}
                     </p>
                   </div>
                 </div>
 
-                <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
-                      <span className="text-muted-foreground">
-                        AI正在创作精彩的故事，请稍候...
-                      </span>
-                    </div>
-                  ) : (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        p: ({ node, ...props }) => (
-                          <p className="mt-4" {...props} />
-                        ),
-                        h1: ({ node, ...props }) => (
-                          <h1
-                            className="text-2xl font-bold mt-6 mb-4"
-                            {...props}
+                <div className="space-y-6">
+                  {/* Story Content */}
+                  <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
+                    {loading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
+                        <span className="text-muted-foreground">
+                          AI正在创作精彩的故事...
+                        </span>
+                      </div>
+                    ) : (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ node, ...props }) => (
+                            <p className="mt-4" {...props} />
+                          ),
+                          h1: ({ node, ...props }) => (
+                            <h1
+                              className="text-2xl font-bold mt-6 mb-4"
+                              {...props}
+                            />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2
+                              className="text-xl font-semibold mt-5 mb-3"
+                              {...props}
+                            />
+                          ),
+                          li: ({ node, ...props }) => (
+                            <li className="ml-6 list-disc" {...props} />
+                          ),
+                        }}
+                      >
+                        {story}
+                      </ReactMarkdown>
+                    )}
+                  </div>
+
+                  {/* Generated Image - Now below the article */}
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                    <h3 className="text-lg font-semibold text-card-foreground mb-3 flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5" />
+                      AI配图
+                    </h3>
+
+                    {!user ? (
+                      <div className="text-center py-8">
+                        <div className="text-amber-500 mb-3">🔒</div>
+                        <p className="text-amber-700 dark:text-amber-300 font-medium mb-2">
+                          登录后解锁AI配图功能
+                        </p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          登录用户可以查看AI生成的精美配图，并挑战排行榜！
+                        </p>
+                        <Button
+                          onClick={() => router.push("/login")}
+                          className="font-medium"
+                        >
+                          立即登录
+                        </Button>
+                      </div>
+                    ) : imageLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
+                        <span className="text-muted-foreground">
+                          AI正在生成配图，请稍候...
+                        </span>
+                      </div>
+                    ) : imageError ? (
+                      <div className="text-center py-8">
+                        <div className="text-red-500 mb-2">❌</div>
+                        <p className="text-red-600 dark:text-red-400 text-sm">
+                          {imageError}
+                        </p>
+                      </div>
+                    ) : generatedImage ? (
+                      <div className="space-y-3">
+                        <div className="p-3 sm:p-4 mx-auto max-w-[80vw] sm:max-w-[640px] md:max-w-[768px] lg:max-w-[896px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={generatedImage}
+                            alt="AI生成的故事配图"
+                            className="w-full h-auto object-contain rounded-md"
+                            loading="lazy"
+                            decoding="async"
+                            style={{ aspectRatio: "1280/896" }}
+                            onLoad={(e) =>
+                              console.log(
+                                "Image dimensions:",
+                                e.target.naturalWidth,
+                                e.target.naturalHeight
+                              )
+                            }
                           />
-                        ),
-                        h2: ({ node, ...props }) => (
-                          <h2
-                            className="text-xl font-semibold mt-5 mb-3"
-                            {...props}
-                          />
-                        ),
-                        li: ({ node, ...props }) => (
-                          <li className="ml-6 list-disc" {...props} />
-                        ),
-                      }}
-                    >
-                      {story}
-                    </ReactMarkdown>
-                  )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -637,7 +787,7 @@ export default function HomePage() {
 
                 {/* Question */}
                 <div className="bg-muted rounded-xl p-6 border border-border/50">
-                  <p className="text-lg font-medium text-card-foreground mb-6">
+                  <p className="text-lg font-semibold text-card-foreground mb-6">
                     {questions[currentQuestion]}
                   </p>
                   <div className="space-y-3">
@@ -692,7 +842,7 @@ export default function HomePage() {
                               onChange={() => handleAnswerChange(opt)}
                               className="hidden"
                             />
-                            <span className="flex-1 text-base">{opt}</span>
+                            <span className="flex-1 text-lg">{opt}</span>
                             {score !== null && isCorrect && (
                               <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
                                 <svg
@@ -805,10 +955,10 @@ export default function HomePage() {
 
         {/* Login Modal for Guest Users */}
         <Dialog open={showLoginModal} onOpenChange={handleModalClose}>
-          <DialogContent>
+          <DialogContent aria-describedby="dialog-description">
             <DialogHeader className="flex flex-col items-center">
               <DialogTitle>答题完成！</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="dialog-description">
                 您的得分是 {guestScore} / 100 分
               </DialogDescription>
             </DialogHeader>
