@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -94,6 +95,9 @@ export default function AppHeader() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>用户信息</DialogTitle>
+                      <DialogDescription>
+                        查看和管理您的账户信息
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>

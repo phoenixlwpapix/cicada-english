@@ -8,23 +8,17 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { words, difficulty = "A1", length = 300, name, category } = body;
+    const { prompt } = body;
 
     console.log("[API] Request body:", body);
-    console.log("[API] Words received:", words);
-    console.log("[API] Difficulty:", difficulty);
-    console.log("[API] Length:", length);
-    console.log("[API] Name:", name);
-    console.log("[API] Category:", category);
+    console.log("[API] Prompt received:", prompt);
 
-    // Use provided name and category, or default if not provided
-    const selectedName = name || "Alex";
-    const selectedCategory = category || "日常";
-
-    if (!words || !Array.isArray(words) || words.length === 0) {
-      console.error("[API] Invalid words input:", words);
+    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+      console.error("[API] Invalid prompt input:", prompt);
       return NextResponse.json(
-        { error: "Invalid words input. Please provide an array of words." },
+        {
+          error: "Invalid prompt input. Please provide a valid prompt string.",
+        },
         { status: 400 }
       );
     }
@@ -37,40 +31,7 @@ export async function POST(req) {
       );
     }
 
-    const difficultyDesc = {
-      A1: "非常基础，简单词汇和句子，适合初学者",
-      A2: "基础水平，常见词汇和简单句型",
-      B1: "中级水平，更多词汇和句型",
-      B2: "中高级水平，复杂词汇和句型",
-    };
-
-    const prompt = `
-你是一名面向中国中小学生的英语阅读教师。请根据给定的单词编写一篇约${length}词的英语短文。随后设计5道英文阅读理解单选题，并在最后生成简短的适用于图像AI生成的ImagePrompt：
-
-文章要求：主人公名字为${selectedName}。内容语言清晰简洁，难度为CEFR ${difficulty}水平 (${
-      difficultyDesc[difficulty]
-    })，类别为${selectedCategory}。文章标题用二号标题(##)。
-出题要求：每题提供 A/B/C 三个选项；明确标注正确答案；正确答案在 A、B、C 中分布均衡，不集中在同一个选项。
-
-单词列表：${words.join(", ")}。
-输出格式如下，Questions和Answer部分每一行开始都不要有任何空格,并且单词列表中出现的单词用黑体标注（**）：
----
-Story:
-...（英文标题和文章）
-
-Questions:
-1. 问题文本
-A. 选项A
-B. 选项B
-C. 选项C
-Answer: A
-
-（重复5题）
-
-ImagePrompt:（根据文章总结的用于图像生成的提示词，标明绘制适合青少年的明快卡通图像）
-`;
-
-    console.log("[API] Generated prompt:", prompt);
+    console.log("[API] Using provided prompt:", prompt);
 
     console.log("[API] Making request to Gemini API...");
 
@@ -107,7 +68,7 @@ ImagePrompt:（根据文章总结的用于图像生成的提示词，标明绘�
         return NextResponse.json(
           {
             error: "地理位置限制：Google Gemini API在您所在的地区不可用",
-            details: "请尝试使用VPN连接到支持的地区，或联系管理员更换API服务",
+            details: "请尝试切换IP至支持的地区，或联系管理员更换API服务",
             technicalError: errorText,
           },
           { status: 403 }
