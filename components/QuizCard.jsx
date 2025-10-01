@@ -81,9 +81,16 @@ export default function QuizCard({
           {/* Question */}
           <div className="bg-muted rounded-xl p-6 border border-border/50">
             <div className="text-lg font-semibold text-card-foreground mb-6">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {questions[currentQuestion]}
-              </ReactMarkdown>
+              <div className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                  {currentQuestion + 1}
+                </span>
+                <div className="flex-1">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {questions[currentQuestion].replace(/^\d+\.\s*/, "")}
+                  </ReactMarkdown>
+                </div>
+              </div>
             </div>
             <div className="space-y-3">
               {options[currentQuestion].map((opt, i) => {

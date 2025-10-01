@@ -34,7 +34,7 @@ export default function HomePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [difficulty, setDifficulty] = useState("A2");
+  const [difficulty, setDifficulty] = useState("A1");
   const [length, setLength] = useState(200);
 
   // Image generation states
@@ -161,28 +161,16 @@ export default function HomePage() {
       // Generate the prompt using the component
       const promptResult = generatePrompt(selectedDifficulty, selectedLength);
 
-      // Set the generated words, name, and category
-      setWords(promptResult.words);
-
       console.log(
-        "[Frontend] Starting generation with words:",
-        promptResult.words,
+        "[Frontend] Starting generation with:",
         "Difficulty:",
         selectedDifficulty,
         "Length:",
         selectedLength,
-        "Name:",
-        promptResult.name,
-        "Category:",
-        promptResult.category,
-        "Writing Style:",
-        promptResult.writingStyle,
-        "Narrative Drive:",
-        promptResult.narrativeDrive,
-        "Tone:",
-        promptResult.tone,
         "Retry:",
-        retryCount
+        retryCount,
+        "Full Prompt:",
+        promptResult.prompt
       );
 
       const res = await fetch("/api/generate", {
@@ -313,21 +301,27 @@ export default function HomePage() {
           currentOpts = [];
 
         for (let line of questionLines) {
-          if (/^\d+\.\s/.test(line)) {
+          // Trim leading whitespace for consistent processing
+          const trimmedLine = line.trim();
+
+          if (/^\d+\.\s/.test(trimmedLine)) {
             if (currentQuestion) {
               parsedQuestions.push(currentQuestion);
               parsedOptions.push(currentOpts);
               currentOpts = [];
             }
-            currentQuestion = line;
-          } else if (/^[ABC]\.\s/.test(line)) {
-            currentOpts.push(line.slice(3)); // remove "A. "
-          } else if (/^Answer:\s*/i.test(line)) {
-            const correctLetter = line.trim().split(":")[1].trim();
+            currentQuestion = trimmedLine;
+          } else if (/^[ABC]\.\s/.test(trimmedLine)) {
+            // Remove "A. " from the trimmed line
+            currentOpts.push(trimmedLine.slice(3));
+          } else if (/^Answer:\s*/i.test(trimmedLine)) {
+            const correctLetter = trimmedLine.split(":")[1].trim();
             const correctIndex = { A: 0, B: 1, C: 2 }[
               correctLetter.toUpperCase()
             ];
-            parsedAnswers.push(currentOpts[correctIndex]);
+            if (correctIndex !== undefined && currentOpts[correctIndex]) {
+              parsedAnswers.push(currentOpts[correctIndex]);
+            }
           }
         }
 

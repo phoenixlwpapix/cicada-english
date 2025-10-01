@@ -62,7 +62,7 @@ export default function WordInputCard({
 
             <div className="flex justify-center">
               <Button
-                onClick={onGenerate}
+                onClick={() => onGenerate(difficulty, length)}
                 disabled={loading}
                 className="font-bold text-base"
                 style={{ backgroundColor: "var(--secondary2)" }}
