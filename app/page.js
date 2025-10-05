@@ -391,11 +391,6 @@ export default function HomePage() {
     const finalScore = correct * 20;
     setScore(finalScore);
 
-    // Calculate story word count
-    const storyWordCount = story
-      .split(/\s+/)
-      .filter((word) => word.length > 0).length;
-
     // Check if user is authenticated
     if (!user) {
       // Show modal for guest users
@@ -409,7 +404,6 @@ export default function HomePage() {
       totalQuestions: answers.length,
       correctAnswers: correct,
       score: finalScore,
-      storyLength: storyWordCount,
       user,
     });
 

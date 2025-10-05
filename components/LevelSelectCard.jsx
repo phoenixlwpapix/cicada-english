@@ -20,7 +20,7 @@ export default function LevelSelectCard({
                   <span className="text-lg font-medium text-primary/90 mr-2">
                     CEFR水平:
                   </span>
-                  {["A1", "A2", "B1", "B2", "X1"].map((lvl) => (
+                  {["A1", "A2", "B1", "B2"].map((lvl) => (
                     <Button
                       key={lvl}
                       variant={level === lvl ? "default" : "outline"}
@@ -34,8 +34,11 @@ export default function LevelSelectCard({
                   ))}
                 </div>
                 {/* 难度提示 */}
-                <div className="text-center text-sm text-muted-foreground">
-                  A1:小学1-3年级 A2:小学4-6年级 B1:初中 B2:高中 X1:天马行空
+                <div className="text-center text-sm text-muted-foreground space-y-1">
+                  <div>A1: 小学1-3年级，基础词汇和简单句型</div>
+                  <div>A2: 小学4-6年级，扩展词汇和基本时态</div>
+                  <div>B1: 初中，中等难度词汇和复合句</div>
+                  <div>B2: 高中，高级词汇和复杂结构</div>
                 </div>
               </div>
             </div>
