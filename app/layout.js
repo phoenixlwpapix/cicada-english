@@ -6,7 +6,7 @@ import ClientLayout from "./client-layout";
 
 export const metadata = {
   title: "知了英语 Cicada English",
-  description: "适合中国小学生的英语阅读学习网站",
+  description: "适合中国小学生的AI英语阅读学习网站",
 };
 
 export default function RootLayout({ children }) {

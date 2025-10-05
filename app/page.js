@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import AppHeader from "@/components/AppHeader";
 import StoryCard from "@/components/StoryCard";
-import WordInputCard from "@/components/WordInputCard";
+import LevelSelectCard from "@/components/LevelSelectCard";
 import QuizCard from "@/components/QuizCard";
 import generatePrompt from "@/lib/prompt-generator";
 import { processQuizSubmission } from "@/lib/quiz-data";
@@ -25,7 +25,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { generatePortrait, base64ToBlobUrl } from "@/lib/image-generator";
 
 export default function HomePage() {
-  const [words, setWords] = useState("");
   const [story, setStory] = useState("");
   const [questions, setQuestions] = useState([]);
   const [options, setOptions] = useState([]);
@@ -34,8 +33,8 @@ export default function HomePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [difficulty, setDifficulty] = useState("A1");
-  const [length, setLength] = useState(200);
+  const [level, setLevel] = useState("A2");
+  const [currentStoryLevel, setCurrentStoryLevel] = useState("A2");
 
   // Image generation states
   const [generatedImage, setGeneratedImage] = useState(null);
@@ -143,12 +142,9 @@ export default function HomePage() {
     }
   }, [user, story, loading, imagePrompt]);
 
-  const handleGenerate = async (
-    selectedDifficulty = difficulty,
-    selectedLength = length,
-    retryCount = 0
-  ) => {
+  const handleGenerate = async (selectedLevel = level, retryCount = 0) => {
     const maxRetries = 2;
+    setCurrentStoryLevel(selectedLevel);
     setLoading(true);
     setScore(null);
     setStory("");
@@ -159,14 +155,12 @@ export default function HomePage() {
 
     try {
       // Generate the prompt using the component
-      const promptResult = generatePrompt(selectedDifficulty, selectedLength);
+      const promptResult = generatePrompt(selectedLevel);
 
       console.log(
         "[Frontend] Starting generation with:",
-        "Difficulty:",
-        selectedDifficulty,
-        "Length:",
-        selectedLength,
+        "Level:",
+        selectedLevel,
         "Retry:",
         retryCount,
         "Full Prompt:",
@@ -205,12 +199,7 @@ export default function HomePage() {
             }/${maxRetries})`
           );
           setTimeout(
-            () =>
-              handleGenerate(
-                selectedDifficulty,
-                selectedLength,
-                retryCount + 1
-              ),
+            () => handleGenerate(selectedLevel, retryCount + 1),
             1000 * (retryCount + 1)
           );
           return;
@@ -238,12 +227,7 @@ export default function HomePage() {
             }/${maxRetries})`
           );
           setTimeout(
-            () =>
-              handleGenerate(
-                selectedDifficulty,
-                selectedLength,
-                retryCount + 1
-              ),
+            () => handleGenerate(selectedLevel, retryCount + 1),
             2000 * (retryCount + 1)
           );
           return;
@@ -333,7 +317,10 @@ export default function HomePage() {
       }
 
       console.log("[Frontend] Final parsed data:");
-      console.log("  - Story length:", parsedStory.length);
+      console.log(
+        "  - Story word count:",
+        parsedStory.split(/\s+/).filter((word) => word.length > 0).length
+      );
       console.log("  - Questions count:", parsedQuestions.length);
       console.log("  - Options count:", parsedOptions.length);
       console.log("  - Answers count:", parsedAnswers.length);
@@ -373,8 +360,7 @@ export default function HomePage() {
           }/${maxRetries})`
         );
         setTimeout(
-          () =>
-            handleGenerate(selectedDifficulty, selectedLength, retryCount + 1),
+          () => handleGenerate(selectedLevel, retryCount + 1),
           2000 * (retryCount + 1)
         );
         return;
@@ -405,6 +391,11 @@ export default function HomePage() {
     const finalScore = correct * 20;
     setScore(finalScore);
 
+    // Calculate story word count
+    const storyWordCount = story
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
+
     // Check if user is authenticated
     if (!user) {
       // Show modal for guest users
@@ -418,6 +409,7 @@ export default function HomePage() {
       totalQuestions: answers.length,
       correctAnswers: correct,
       score: finalScore,
+      storyLength: storyWordCount,
       user,
     });
 
@@ -461,13 +453,11 @@ export default function HomePage() {
           </div>
         </div>
 
-        <WordInputCard
-          difficulty={difficulty}
-          length={length}
+        <LevelSelectCard
+          level={level}
           loading={loading}
-          onDifficultyChange={setDifficulty}
-          onLengthChange={setLength}
-          onGenerate={handleGenerate}
+          onLevelChange={setLevel}
+          onGenerate={() => handleGenerate(level)}
         />
 
         {/* 文章卡片 */}
@@ -494,10 +484,11 @@ export default function HomePage() {
             currentQuestion={currentQuestion}
             score={score}
             user={user}
+            loading={loading}
             onCurrentQuestionChange={setCurrentQuestion}
             onAnswerChange={handleAnswerChange}
             onSubmit={handleSubmit}
-            onGenerate={handleGenerate}
+            onGenerate={() => handleGenerate(currentStoryLevel)}
           />
         )}
 

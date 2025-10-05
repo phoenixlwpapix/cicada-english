@@ -74,8 +74,10 @@ export default function StoryCard({
   // Image Display Component
   const ImageDisplay = () => (
     <div
-      className={`bg-muted/50 rounded-xl ${
-        width < 640 ? "px-2" : "p-4 border border-border/50"
+      className={`bg-muted rounded-xl ${
+        width < 640
+          ? "px-2 border border-border/50"
+          : "p-6 border border-border/50"
       }`}
     >
       <h3 className="text-lg font-semibold text-card-foreground mb-3 flex items-center gap-2">

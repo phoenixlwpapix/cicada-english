@@ -1,7 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { ArrowLeft, ArrowRight, Brain, Sparkles } from "lucide-react";
 
 export default function QuizCard({
@@ -12,6 +10,7 @@ export default function QuizCard({
   currentQuestion,
   score,
   user,
+  loading,
   onCurrentQuestionChange,
   onAnswerChange,
   onSubmit,
@@ -81,16 +80,7 @@ export default function QuizCard({
           {/* Question */}
           <div className="bg-muted rounded-xl p-6 border border-border/50">
             <div className="text-lg font-semibold text-card-foreground mb-6">
-              <div className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
-                  {currentQuestion + 1}
-                </span>
-                <div className="flex-1">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {questions[currentQuestion].replace(/^\d+\.\s*/, "")}
-                  </ReactMarkdown>
-                </div>
-              </div>
+              {questions[currentQuestion]}
             </div>
             <div className="space-y-3">
               {options[currentQuestion].map((opt, i) => {
@@ -144,11 +134,7 @@ export default function QuizCard({
                         onChange={() => onAnswerChange(opt)}
                         className="hidden"
                       />
-                      <div className="flex-1 text-lg">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {opt}
-                        </ReactMarkdown>
-                      </div>
+                      <div className="flex-1 text-lg">{opt}</div>
                       {score !== null && isCorrect && (
                         <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
                           <svg
@@ -205,7 +191,7 @@ export default function QuizCard({
                   </div>
 
                   <h3 className="text-2xl font-bold text-card-foreground mb-2">
-                    你的得分：{score} / 100
+                    你的得分：{score} / {questions.length * 20}
                   </h3>
 
                   <div className="text-lg">
@@ -239,9 +225,22 @@ export default function QuizCard({
                   </div>
                 </div>
                 <div className="flex justify-center">
-                  <Button onClick={onGenerate} className="font-bold text-base">
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    再来一篇
+                  <Button
+                    onClick={onGenerate}
+                    disabled={loading}
+                    className="font-bold text-base"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5 mr-2" />
+                        再来一篇
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
