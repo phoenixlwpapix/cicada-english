@@ -18,7 +18,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, BookOpen, Target, Award } from "lucide-react";
+import { TrendingUp, BookOpen, Target, Award, Home } from "lucide-react";
 import AppHeader from "@/components/AppHeader";
 import {
   getUserStats,
@@ -128,18 +128,29 @@ export default function DashboardPage() {
   return (
     <>
       <AppHeader />
-      <div className="px-4 sm:px-12 lg:px-24 py-6 space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold py-1 mb-2">
-            <span className="text-primary">
-              {dataLoaded ? "成绩统计" : "获取成绩中..."}
-            </span>
-          </h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-12 lg:px-24 py-6 space-y-8">
+        <div className="flex justify-between items-center">
+          <Button
+            onClick={() => router.push("/")}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            首页
+          </Button>
+          <div className="text-center flex-grow">
+            <h1 className="text-3xl font-bold py-1 mb-2">
+              <span className="text-primary">
+                {dataLoaded ? "成绩统计" : "获取成绩中..."}
+              </span>
+            </h1>
+          </div>
+          <div className="w-32"></div> {/* Empty div for balance */}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Statistics Cards - Left Column */}
-          <div className="flex flex-col gap-6 h-full">
+          <div className="flex flex-col gap-6 h-full lg:col-span-4">
             <Card className="flex-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">总答题数</CardTitle>
@@ -176,7 +187,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Score Trends - Right Column */}
-          <div>
+          <div className="lg:col-span-8">
             <Card className="h-full">
               <CardHeader>
                 <div className="flex justify-between items-center">

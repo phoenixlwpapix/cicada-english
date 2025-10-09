@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Nunito", sans-serif;
   --font-mono: var(--font-geist-mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -81,7 +81,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 

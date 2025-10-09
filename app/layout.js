@@ -14,14 +14,22 @@ export default function RootLayout({ children }) {
     <html lang="zh" suppressHydrationWarning>
       <Head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="true"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </Head>
       <body className="flex flex-col min-h-screen transition-colors duration-300 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-slate-100">
-        {/* 3. 创建一个 div 来包裹主内容，并添加 flex-grow */}
         <div className="flex-grow">
           <ClientLayout>{children}</ClientLayout>
         </div>
 
-        {/* 4. 在 body 的末尾、主内容div的外面添加页脚 */}
         <AppFooter />
       </body>
     </html>

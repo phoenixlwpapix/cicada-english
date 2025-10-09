@@ -6,7 +6,11 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Nunito", "sans-serif"],
+      },
+    },
   },
   plugins: [
     require("@tailwindcss/typography"), // 添加 Typography 插件

@@ -58,6 +58,7 @@ export default function HomePage() {
   };
 
   const storyRef = useRef(null);
+  const storyCardRef = useRef(null);
 
   // Mutation for submitting quiz
   const submitQuizMutation = useMutation({
@@ -141,6 +142,13 @@ export default function HomePage() {
       }
     }
   }, [user, story, loading, imagePrompt]);
+
+  // Stop speech when quiz is shown
+  useEffect(() => {
+    if (questions.length > 0 && storyCardRef.current?.stopSpeaking) {
+      storyCardRef.current.stopSpeaking();
+    }
+  }, [questions.length]);
 
   const handleGenerate = async (selectedLevel = level, retryCount = 0) => {
     const maxRetries = 2;
@@ -465,6 +473,10 @@ export default function HomePage() {
               imageError={imageError}
               generatedImage={generatedImage}
               storyRef={storyRef}
+              onQuizStart={(stopSpeaking) => {
+                // Store the stopSpeaking function to call when quiz is shown
+                storyCardRef.current = { stopSpeaking };
+              }}
             />
           </section>
         )}

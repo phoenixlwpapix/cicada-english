@@ -228,7 +228,8 @@ export default function QuizCard({
                   <Button
                     onClick={onGenerate}
                     disabled={loading}
-                    className="font-bold text-base"
+                    className="font-bold text-base px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    style={{ backgroundColor: "var(--secondary2)" }}
                   >
                     {loading ? (
                       <>

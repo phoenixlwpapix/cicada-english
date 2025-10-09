@@ -41,83 +41,79 @@ export default function LevelSelectCard({
 
   return (
     <section className="mb-16">
-      <Card className="backdrop-blur-lg bg-muted border-border shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden">
+      <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden">
         <CardContent className="space-y-6 px-4 sm:px-8 py-6 sm:py-8">
-          <div className="text-primary rounded-xl p-6">
-            <div className="space-y-6">
-              {/* 难度选项卡片 */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {["A1", "A2", "B1", "B2"].map((lvl) => {
-                    const levelInfo = levelDescriptions[lvl];
-                    const LevelIcon = levelInfo.icon;
-                    const isSelected = level === lvl;
+          {/* 难度选项卡片 */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {["A1", "A2", "B1", "B2"].map((lvl) => {
+                const levelInfo = levelDescriptions[lvl];
+                const LevelIcon = levelInfo.icon;
+                const isSelected = level === lvl;
 
-                    return (
-                      <Card
-                        key={lvl}
-                        onClick={() => onLevelChange(lvl)}
-                        className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                return (
+                  <Card
+                    key={lvl}
+                    onClick={() => onLevelChange(lvl)}
+                    className={`cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      isSelected
+                        ? `ring-2 ring-primary shadow-lg ${levelInfo.bgColor}`
+                        : "hover:shadow-md bg-card"
+                    }`}
+                  >
+                    <CardContent className="p-3 text-center space-y-1">
+                      <div className="flex items-center justify-center space-x-1">
+                        <LevelIcon
+                          className={`w-4 h-4 ${
+                            isSelected
+                              ? levelInfo.color
+                              : "text-muted-foreground"
+                          }`}
+                        />
+                        <span
+                          className={`text-lg font-bold ${
+                            isSelected ? levelInfo.color : "text-foreground"
+                          }`}
+                        >
+                          {lvl}
+                        </span>
+                      </div>
+                      <div
+                        className={`text-sm ${
                           isSelected
-                            ? `ring-2 ring-primary shadow-lg ${levelInfo.bgColor}`
-                            : "hover:shadow-md bg-card"
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                         }`}
                       >
-                        <CardContent className="p-3 text-center space-y-1">
-                          <div className="flex items-center justify-center space-x-1">
-                            <LevelIcon
-                              className={`w-4 h-4 ${
-                                isSelected
-                                  ? levelInfo.color
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                            <span
-                              className={`text-lg font-bold ${
-                                isSelected ? levelInfo.color : "text-foreground"
-                              }`}
-                            >
-                              {lvl}
-                            </span>
-                          </div>
-                          <div
-                            className={`text-sm ${
-                              isSelected
-                                ? "text-foreground"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {levelInfo.text}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
+                        {levelInfo.text}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+          </div>
 
-            {/* 生成按钮 */}
-            <div className="flex justify-center pt-8">
-              <Button
-                onClick={() => onGenerate()}
-                disabled={loading}
-                className="font-bold text-base px-8 py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 animate-pulse"
-                style={{ backgroundColor: "var(--secondary2)" }}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    AI生成中...
-                  </>
-                ) : (
-                  <>
-                    <Siren className="w-5 h-5 mr-2" />
-                    点我生成文章
-                  </>
-                )}
-              </Button>
-            </div>
+          {/* 生成按钮 */}
+          <div className="flex justify-center pt-8">
+            <Button
+              onClick={() => onGenerate()}
+              disabled={loading}
+              className="font-bold text-base px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              style={{ backgroundColor: "var(--secondary2)" }}
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  AI生成中...
+                </>
+              ) : (
+                <>
+                  <Siren className="w-5 h-5 mr-2" />
+                  点我生成文章
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
