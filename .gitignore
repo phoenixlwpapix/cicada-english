@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.kilocode/
 
 # next.js
 /.next/

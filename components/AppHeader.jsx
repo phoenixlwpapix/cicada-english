@@ -14,17 +14,27 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import AvatarSelector from "@/components/AvatarSelector";
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut, updateAvatar } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
+  };
+
+  const handleAvatarChange = async (avatarUrl) => {
+    const result = await updateAvatar(avatarUrl);
+    if (result.error) {
+      console.error("Failed to update avatar:", result.error);
+      // Show error to user
+      alert(`更换头像失败: ${result.error}`);
+    }
   };
 
   useEffect(() => {
@@ -81,65 +91,97 @@ export default function AppHeader() {
               </div>
             </Link>
           </div>
-
           {/* Navigation and Theme Toggle */}
-          {mounted && (
-            <div className="flex items-center gap-4">
-              {user && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <button className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground hover:bg-muted/80 transition-colors border-2 border-border shadow-sm hover:shadow-md">
-                      {user.email.slice(0, 2).toUpperCase()}
-                    </button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>用户信息</DialogTitle>
-                      <DialogDescription>
-                        查看和管理您的账户信息
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">用户名</label>
-                        <p>{user.email}</p>
+          <div className="flex items-center gap-4">
+            {user && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground hover:bg-muted/80 transition-colors border-2 border-border shadow-sm hover:shadow-md overflow-hidden">
+                    {userProfile?.avatarUrl ? (
+                      <img
+                        src={userProfile.avatarUrl}
+                        alt="User Avatar"
+                        className="w-full h-full object-cover object-center scale-120"
+                      />
+                    ) : (
+                      user.email.slice(0, 2).toUpperCase()
+                    )}
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="dark:bg-gray-800">
+                  <DialogHeader>
+                    <DialogTitle>用户信息</DialogTitle>
+                    <DialogDescription>
+                      查看和管理您的账户信息
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border shadow-sm">
+                        {userProfile?.avatarUrl ? (
+                          <img
+                            src={userProfile.avatarUrl}
+                            alt="User Avatar"
+                            className="w-full h-full object-cover object-center scale-120"
+                          />
+                        ) : (
+                          <span className="text-2xl font-medium text-muted-foreground">
+                            {user.email.slice(0, 2).toUpperCase()}
+                          </span>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-sm font-medium">邮箱</label>
-                        <p>{user.email}</p>
-                      </div>
-                      <Button
-                        onClick={handleSignOut}
-                        variant="outline"
-                        className="w-full"
+                      <AvatarSelector
+                        currentAvatar={
+                          userProfile?.avatarUrl || "/avatars/monkey.png"
+                        }
+                        onAvatarChange={handleAvatarChange}
                       >
-                        <LogOut className="w-4 h-4 mr-2" />
-                        登出
-                      </Button>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          更换头像
+                        </Button>
+                      </AvatarSelector>
                     </div>
-                  </DialogContent>
-                </Dialog>
-              )}
+                    <div>
+                      <label className="text-sm font-medium">用户名</label>
+                      <p>{user.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">邮箱</label>
+                      <p>{user.email}</p>
+                    </div>
+                    <Button
+                      onClick={handleSignOut}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      登出
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
 
-              {/* Auth Buttons */}
-              {user ? (
-                <Button
-                  onClick={() => router.push("/dashboard")}
-                  variant={pathname === "/dashboard" ? "default" : "outline"}
-                >
-                  我的成绩
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => router.push("/login")}
-                  variant="outline"
-                  size="sm"
-                  className="text-primary"
-                >
-                  登录
-                </Button>
-              )}
+            {/* Auth Buttons */}
+            {user ? (
+              <Button
+                onClick={() => router.push("/dashboard")}
+                variant={pathname === "/dashboard" ? "default" : "outline"}
+              >
+                我的成绩
+              </Button>
+            ) : (
+              <Button
+                onClick={() => router.push("/login")}
+                variant="outline"
+                size="sm"
+                className="text-primary"
+              >
+                登录
+              </Button>
+            )}
 
+            {mounted && (
               <button
                 onClick={toggleTheme}
                 className="relative w-14 h-8 rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring bg-gradient-to-r border-2 border-border shadow-sm hover:shadow-md transform hover:scale-105"
@@ -173,8 +215,8 @@ export default function AppHeader() {
                   />
                 </div>
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>
