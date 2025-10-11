@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { getUserProfile } from "@/lib/quiz-data";
 
 const AuthContext = createContext({});
 
@@ -40,6 +42,17 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Query for user profile
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useQuery({
+    queryKey: ["userProfile", user?.id],
+    queryFn: getUserProfile,
+    enabled: !!user,
+  });
+
   const signUp = async (email, password) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -64,6 +77,9 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    profile,
+    profileLoading,
+    refetchProfile,
     signUp,
     signIn,
     signOut,

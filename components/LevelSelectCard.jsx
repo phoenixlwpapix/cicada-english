@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Siren, BookOpen, GraduationCap, Award } from "lucide-react";
+import { Siren, BookOpen, GraduationCap, Award, Sprout } from "lucide-react";
 
 export default function LevelSelectCard({
   level,
@@ -12,7 +12,7 @@ export default function LevelSelectCard({
   const levelDescriptions = {
     A1: {
       text: "小学1-3年级，词汇量500-1000",
-      icon: BookOpen,
+      icon: Sprout,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },

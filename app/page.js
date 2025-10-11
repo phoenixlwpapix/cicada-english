@@ -15,7 +15,7 @@ import LevelSelectCard from "@/components/LevelSelectCard";
 import QuizCard from "@/components/QuizCard";
 import generatePrompt from "@/lib/prompt-generator";
 import { processQuizSubmission } from "@/lib/quiz-data";
-import { BookOpen } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { useState, useRef, useEffect } from "react";
@@ -110,8 +110,66 @@ export default function HomePage() {
       setImageLoading(false);
       setImageError(null);
       setImagePrompt("");
+      // Clear saved session data
+      localStorage.removeItem("cicada-session");
     }
   }, [user]);
+
+  // Load saved session data on component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedSession = localStorage.getItem("cicada-session");
+      if (savedSession) {
+        try {
+          const sessionData = JSON.parse(savedSession);
+          setStory(sessionData.story || "");
+          setQuestions(sessionData.questions || []);
+          setOptions(sessionData.options || []);
+          setAnswers(sessionData.answers || []);
+          setUserAnswers(sessionData.userAnswers || []);
+          setCurrentQuestion(sessionData.currentQuestion || 0);
+          setScore(sessionData.score || null);
+          setCurrentStoryLevel(sessionData.currentStoryLevel || "A2");
+          setGeneratedImage(sessionData.generatedImage || null);
+          setImagePrompt(sessionData.imagePrompt || "");
+        } catch (error) {
+          console.error("Error loading saved session:", error);
+          localStorage.removeItem("cicada-session");
+        }
+      }
+    }
+  }, []);
+
+  // Save session data whenever relevant state changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && story) {
+      const sessionData = {
+        story,
+        questions,
+        options,
+        answers,
+        userAnswers,
+        currentQuestion,
+        score,
+        currentStoryLevel,
+        generatedImage,
+        imagePrompt,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem("cicada-session", JSON.stringify(sessionData));
+    }
+  }, [
+    story,
+    questions,
+    options,
+    answers,
+    userAnswers,
+    currentQuestion,
+    score,
+    currentStoryLevel,
+    generatedImage,
+    imagePrompt,
+  ]);
 
   // Generate image after story is successfully created (only for logged-in users)
   useEffect(() => {
@@ -160,6 +218,8 @@ export default function HomePage() {
     setGeneratedImage(null);
     setImageError(null);
     setImagePrompt("");
+    // Clear saved session data when generating new content
+    localStorage.removeItem("cicada-session");
 
     try {
       // Generate the prompt using the component
@@ -415,6 +475,9 @@ export default function HomePage() {
       user,
     });
 
+    // Clear saved session data after quiz completion
+    localStorage.removeItem("cicada-session");
+
     if (correct === questions.length) {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000); // 5 秒后关闭动画
@@ -439,17 +502,17 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex flex-col">
       <AppHeader />
 
-      <main className="max-w-6xl mx-auto px-6 py-12">
+      <main className="flex-grow max-w-6xl mx-auto px-3 py-3 md:px-6 md:py-6">
         {/* Hero section */}
-        <div className="text-center mb-16 animate-fade-in">
+        <div className="text-center mt-8 mb-8 animate-fade-in">
           <div className="flex flex-col items-center gap-4">
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10">
-              <BookOpen className="w-8 h-8 text-primary dark:text-primary" />
+              <Sparkles className="w-8 h-8 text-primary dark:text-primary" />
               <h1 className="text-2xl font-bold text-primary">
-                AI生成英语故事和阅读理解
+                AI英语故事和阅读理解
               </h1>
             </div>
           </div>

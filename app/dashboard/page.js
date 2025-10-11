@@ -128,24 +128,24 @@ export default function DashboardPage() {
   return (
     <>
       <AppHeader />
-      <div className="max-w-6xl mx-auto px-4 sm:px-12 lg:px-24 py-6 space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="max-w-6xl mx-auto px-2 py-3 sm:px-4 md:px-12 lg:px-24 md:py-6 space-y-8">
+        <div className="grid grid-cols-3 items-center">
           <Button
             onClick={() => router.push("/")}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 justify-self-start"
           >
             <Home className="h-4 w-4" />
             首页
           </Button>
-          <div className="text-center flex-grow">
-            <h1 className="text-3xl font-bold py-1 mb-2">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold py-1 mb-2">
               <span className="text-primary">
                 {dataLoaded ? "成绩统计" : "获取成绩中..."}
               </span>
-            </h1>
+            </h2>
           </div>
-          <div className="w-32"></div> {/* Empty div for balance */}
+          <div></div> {/* Empty div for balance */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">

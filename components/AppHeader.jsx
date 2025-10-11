@@ -14,17 +14,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { updateUserAvatar } from "@/lib/quiz-data";
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { user, signOut } = useAuth();
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const { user, signOut, profile, refetchProfile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
+  };
+
+  const handleAvatarChange = async (avatarUrl) => {
+    try {
+      await updateUserAvatar(avatarUrl);
+      await refetchProfile();
+      setShowAvatarSelector(false);
+    } catch (error) {
+      console.error("Failed to update avatar:", error);
+    }
   };
 
   useEffect(() => {
@@ -61,7 +73,7 @@ export default function AppHeader() {
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="relative">
+            <div className="relative hidden md:block">
               <img
                 src="/cicada.png"
                 alt="Logo"
@@ -88,8 +100,12 @@ export default function AppHeader() {
               {user && (
                 <Dialog>
                   <DialogTrigger asChild>
-                    <button className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground hover:bg-muted/80 transition-colors border-2 border-border shadow-sm hover:shadow-md">
-                      {user.email.slice(0, 2).toUpperCase()}
+                    <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105">
+                      <img
+                        src={profile?.avatar_url || "/cicada.png"}
+                        alt="User Avatar"
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   </DialogTrigger>
                   <DialogContent>
@@ -99,13 +115,25 @@ export default function AppHeader() {
                         查看和管理您的账户信息
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">用户名</label>
-                        <p>{user.email}</p>
+                    <div className="space-y-4 text-center">
+                      <div className="flex justify-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <img
+                            src={profile?.avatar_url || "/cicada.png"}
+                            alt="Avatar"
+                            className="w-18 h-18 rounded-full border-2 border-border"
+                          />
+                          <Button
+                            onClick={() => setShowAvatarSelector(true)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            更换头像
+                          </Button>
+                        </div>
                       </div>
                       <div>
-                        <label className="text-sm font-medium">邮箱</label>
+                        <label className="text-sm font-medium">用户名</label>
                         <p>{user.email}</p>
                       </div>
                       <Button
@@ -121,11 +149,48 @@ export default function AppHeader() {
                 </Dialog>
               )}
 
+              {/* Avatar Selector Dialog */}
+              <Dialog
+                open={showAvatarSelector}
+                onOpenChange={setShowAvatarSelector}
+              >
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>选择头像</DialogTitle>
+                    <DialogDescription>选择一个新的头像图标</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-4 gap-4 py-4">
+                    {Array.from({ length: 16 }, (_, i) => {
+                      const iconNumber = i + 1;
+                      const iconUrl = `${
+                        process.env.NEXT_PUBLIC_SUPABASE_URL
+                      }/storage/v1/object/public/avatars/icon${iconNumber
+                        .toString()
+                        .padStart(2, "0")}.png`;
+                      return (
+                        <button
+                          key={iconNumber}
+                          onClick={() => handleAvatarChange(iconUrl)}
+                          className="w-16 h-16 rounded-full border-2 border-border hover:border-primary transition-colors overflow-hidden"
+                        >
+                          <img
+                            src={iconUrl}
+                            alt={`Avatar ${iconNumber}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               {/* Auth Buttons */}
               {user ? (
                 <Button
                   onClick={() => router.push("/dashboard")}
                   variant={pathname === "/dashboard" ? "default" : "outline"}
+                  className="px-2 sm:px-4"
                 >
                   我的成绩
                 </Button>
@@ -140,9 +205,25 @@ export default function AppHeader() {
                 </Button>
               )}
 
+              {/* Mobile: Icon Button Only */}
               <button
                 onClick={toggleTheme}
-                className="relative w-14 h-8 rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring bg-gradient-to-r border-2 border-border shadow-sm hover:shadow-md transform hover:scale-105"
+                className="md:hidden w-8 h-8 rounded-full flex items-center justify-center border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105"
+                aria-label={
+                  isDark ? "Switch to light mode" : "Switch to dark mode"
+                }
+              >
+                {isDark ? (
+                  <Sun className="w-4 h-4 text-amber-500" />
+                ) : (
+                  <Moon className="w-4 h-4 text-slate-700" />
+                )}
+              </button>
+
+              {/* Desktop: Full Toggle Switch */}
+              <button
+                onClick={toggleTheme}
+                className="hidden md:block relative w-14 h-8 rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring bg-gradient-to-r border-2 border-border shadow-sm hover:shadow-md transform hover:scale-105"
                 style={{
                   background: isDark
                     ? "hsl(var(--muted))"
