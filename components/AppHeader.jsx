@@ -14,14 +14,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import AvatarSelector from "@/components/AvatarSelector";
+import { updateUserAvatar } from "@/lib/quiz-data";
 
 export default function AppHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const { user, userProfile, signOut, updateAvatar } = useAuth();
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const { user, signOut, profile, refetchProfile } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,11 +30,12 @@ export default function AppHeader() {
   };
 
   const handleAvatarChange = async (avatarUrl) => {
-    const result = await updateAvatar(avatarUrl);
-    if (result.error) {
-      console.error("Failed to update avatar:", result.error);
-      // Show error to user
-      alert(`更换头像失败: ${result.error}`);
+    try {
+      await updateUserAvatar(avatarUrl);
+      await refetchProfile();
+      setShowAvatarSelector(false);
+    } catch (error) {
+      console.error("Failed to update avatar:", error);
     }
   };
 
@@ -71,7 +73,7 @@ export default function AppHeader() {
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="relative">
+            <div className="relative hidden md:block">
               <img
                 src="/cicada.png"
                 alt="Logo"
@@ -92,99 +94,131 @@ export default function AppHeader() {
             </Link>
           </div>
           {/* Navigation and Theme Toggle */}
-          <div className="flex items-center gap-4">
-            {user && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-muted-foreground hover:bg-muted/80 transition-colors border-2 border-border shadow-sm hover:shadow-md overflow-hidden">
-                    {userProfile?.avatarUrl ? (
+          {mounted && (
+            <div className="flex items-center gap-4">
+              {user && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105">
                       <img
-                        src={userProfile.avatarUrl}
+                        src={profile?.avatar_url || "/cicada.png"}
                         alt="User Avatar"
-                        className="w-full h-full object-cover object-center scale-120"
+                        className="w-full h-full object-cover"
                       />
-                    ) : (
-                      user.email.slice(0, 2).toUpperCase()
-                    )}
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="dark:bg-gray-800">
-                  <DialogHeader>
-                    <DialogTitle>用户信息</DialogTitle>
-                    <DialogDescription>
-                      查看和管理您的账户信息
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border shadow-sm">
-                        {userProfile?.avatarUrl ? (
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>用户信息</DialogTitle>
+                      <DialogDescription>
+                        查看和管理您的账户信息
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 text-center">
+                      <div className="flex justify-center">
+                        <div className="flex flex-col items-center gap-2">
                           <img
-                            src={userProfile.avatarUrl}
-                            alt="User Avatar"
-                            className="w-full h-full object-cover object-center scale-120"
+                            src={profile?.avatar_url || "/cicada.png"}
+                            alt="Avatar"
+                            className="w-18 h-18 rounded-full border-2 border-border"
                           />
-                        ) : (
-                          <span className="text-2xl font-medium text-muted-foreground">
-                            {user.email.slice(0, 2).toUpperCase()}
-                          </span>
-                        )}
+                          <Button
+                            onClick={() => setShowAvatarSelector(true)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            更换头像
+                          </Button>
+                        </div>
                       </div>
-                      <AvatarSelector
-                        currentAvatar={
-                          userProfile?.avatarUrl || "/avatars/monkey.png"
-                        }
-                        onAvatarChange={handleAvatarChange}
+                      <div>
+                        <label className="text-sm font-medium">用户名</label>
+                        <p>{user.email}</p>
+                      </div>
+                      <Button
+                        onClick={handleSignOut}
+                        variant="outline"
+                        className="w-full"
                       >
-                        <Button variant="outline" size="sm" className="mt-2">
-                          更换头像
-                        </Button>
-                      </AvatarSelector>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        登出
+                      </Button>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">用户名</label>
-                      <p>{user.email}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">邮箱</label>
-                      <p>{user.email}</p>
-                    </div>
-                    <Button
-                      onClick={handleSignOut}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      登出
-                    </Button>
+                  </DialogContent>
+                </Dialog>
+              )}
+              {/* Avatar Selector Dialog */}
+              <Dialog
+                open={showAvatarSelector}
+                onOpenChange={setShowAvatarSelector}
+              >
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>选择头像</DialogTitle>
+                    <DialogDescription>选择一个新的头像图标</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid grid-cols-4 gap-4 py-4">
+                    {Array.from({ length: 16 }, (_, i) => {
+                      const iconNumber = i + 1;
+                      const iconUrl = `${
+                        process.env.NEXT_PUBLIC_SUPABASE_URL
+                      }/storage/v1/object/public/avatars/icon${iconNumber
+                        .toString()
+                        .padStart(2, "0")}.png`;
+                      return (
+                        <button
+                          key={iconNumber}
+                          onClick={() => handleAvatarChange(iconUrl)}
+                          className="w-16 h-16 rounded-full border-2 border-border hover:border-primary transition-colors overflow-hidden"
+                        >
+                          <img
+                            src={iconUrl}
+                            alt={`Avatar ${iconNumber}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
                 </DialogContent>
               </Dialog>
-            )}
-
-            {/* Auth Buttons */}
-            {user ? (
-              <Button
-                onClick={() => router.push("/dashboard")}
-                variant={pathname === "/dashboard" ? "default" : "outline"}
-              >
-                我的成绩
-              </Button>
-            ) : (
-              <Button
-                onClick={() => router.push("/login")}
-                variant="outline"
-                size="sm"
-                className="text-primary"
-              >
-                登录
-              </Button>
-            )}
-
-            {mounted && (
+              {/* Auth Buttons */}
+              {user ? (
+                <Button
+                  onClick={() => router.push("/dashboard")}
+                  variant={pathname === "/dashboard" ? "default" : "outline"}
+                  className="px-2 sm:px-4"
+                >
+                  我的成绩
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => router.push("/login")}
+                  variant="outline"
+                  size="sm"
+                  className="text-primary"
+                >
+                  登录
+                </Button>
+              )}
+              {/* Mobile: Icon Button Only */}
               <button
                 onClick={toggleTheme}
-                className="relative w-14 h-8 rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring bg-gradient-to-r border-2 border-border shadow-sm hover:shadow-md transform hover:scale-105"
+                className="md:hidden w-8 h-8 rounded-full flex items-center justify-center border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105"
+                aria-label={
+                  isDark ? "Switch to light mode" : "Switch to dark mode"
+                }
+              >
+                {isDark ? (
+                  <Sun className="w-4 h-4 text-amber-500" />
+                ) : (
+                  <Moon className="w-4 h-4 text-slate-700" />
+                )}
+              </button>
+              {/* Desktop: Full Toggle Switch */}
+              <button
+                onClick={toggleTheme}
+                className="hidden md:block relative w-14 h-8 rounded-full transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring bg-gradient-to-r border-2 border-border shadow-sm hover:shadow-md transform hover:scale-105"
                 style={{
                   background: isDark
                     ? "hsl(var(--muted))"

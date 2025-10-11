@@ -393,10 +393,6 @@ const StoryCard = forwardRef(function StoryCard(
             />
           </div>
         </div>
-      ) : generatedImage && !showImage ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">图片已隐藏</p>
-        </div>
       ) : null}
     </div>
   );
