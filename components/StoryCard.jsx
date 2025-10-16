@@ -279,11 +279,20 @@ const StoryCard = forwardRef(function StoryCard(
   const StoryContent = () => {
     if (loading) {
       return (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
-          <span className="text-muted-foreground">
-            AI创作中，精彩马上呈现...
-          </span>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <div className="h-6 bg-border rounded-md animate-pulse"></div>
+            <div className="h-4 bg-border rounded-md animate-pulse w-3/4"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-border rounded-md animate-pulse"></div>
+            <div className="h-4 bg-border rounded-md animate-pulse"></div>
+            <div className="h-4 bg-border rounded-md animate-pulse w-5/6"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-border rounded-md animate-pulse"></div>
+            <div className="h-4 bg-border rounded-md animate-pulse w-1/2"></div>
+          </div>
         </div>
       );
     }
