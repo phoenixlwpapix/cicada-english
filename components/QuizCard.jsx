@@ -15,6 +15,7 @@ export default function QuizCard({
   onAnswerChange,
   onSubmit,
   onGenerate,
+  onMyScores,
 }) {
   return (
     <div className="mt-12">
@@ -195,22 +196,24 @@ export default function QuizCard({
                   </h3>
 
                   <div className="text-lg">
-                    {score === 100 && (
+                    {score / (questions.length * 20) === 1 && (
                       <p className="text-green-600 dark:text-green-300 font-semibold flex items-center justify-center gap-2">
                         🎉 完美无瑕！你是英语小能手！
                       </p>
                     )}
-                    {score >= 80 && score < 100 && (
-                      <p className="text-blue-600 dark:text-blue-300 font-semibold">
-                        🎆 太棒了！继续加油！
-                      </p>
-                    )}
-                    {score >= 60 && score < 80 && (
-                      <p className="text-yellow-600 dark:text-yellow-300 font-semibold">
-                        😊 不错哦！再努力一点就更好了！
-                      </p>
-                    )}
-                    {score < 60 && (
+                    {score / (questions.length * 20) >= 0.8 &&
+                      score / (questions.length * 20) < 1 && (
+                        <p className="text-blue-600 dark:text-blue-300 font-semibold">
+                          🎆 太棒了！继续加油！
+                        </p>
+                      )}
+                    {score / (questions.length * 20) >= 0.6 &&
+                      score / (questions.length * 20) < 0.8 && (
+                        <p className="text-yellow-600 dark:text-yellow-300 font-semibold">
+                          😊 不错哦！再努力一点就更好了！
+                        </p>
+                      )}
+                    {score / (questions.length * 20) < 0.6 && (
                       <p className="text-orange-600 dark:text-orange-300 font-semibold">
                         💪 加油！练习使人进步！
                       </p>
@@ -219,30 +222,29 @@ export default function QuizCard({
 
                   <div className="w-full bg-muted rounded-full h-3 mt-4">
                     <div
-                      className="h-3 rounded-full bg-accent transition-all duration-1000 ease-out"
-                      style={{ width: `${score}%` }}
+                      className="h-3 rounded-full bg-secondary transition-all duration-1000 ease-out"
+                      style={{
+                        width: `${(score / (questions.length * 20)) * 100}%`,
+                      }}
                     ></div>
                   </div>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex justify-center gap-4">
                   <Button
                     onClick={onGenerate}
                     disabled={loading}
-                    className="font-bold text-base px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                    style={{ backgroundColor: "var(--secondary2)" }}
+                    className="font-bold text-base bg-secondary2 hover:bg-secondary2/90 px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 "
                   >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        生成中...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-5 h-5 mr-2" />
-                        再来一篇
-                      </>
-                    )}
+                    再做一篇
                   </Button>
+                  {user && (
+                    <Button
+                      onClick={onMyScores}
+                      className="font-bold text-base bg-secondary px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    >
+                      我的成绩
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

@@ -70,7 +70,7 @@ export default function AppHeader() {
 
   return (
     <header className="top-0 z-50 backdrop-blur-lg  border-b border-border shadow-lg">
-      <div className="max-w-6xl mx-auto px-6 py-4">
+      <div className="max-w-6xl mx-auto px-2 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative hidden md:block">
@@ -98,7 +98,7 @@ export default function AppHeader() {
             {user && (
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="w-10 h-10 rounded-full overflow-hidden border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105">
+                  <button className="w-12 h-12 rounded-full overflow-hidden border-2 border-border shadow-sm hover:shadow-md transition-all hover:scale-105">
                     <img
                       src={profile?.avatar_url || "/cicada.png"}
                       alt="User Avatar"

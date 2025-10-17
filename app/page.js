@@ -558,6 +558,7 @@ export default function HomePage() {
             onAnswerChange={handleAnswerChange}
             onSubmit={handleSubmit}
             onGenerate={() => handleGenerate(currentStoryLevel)}
+            onMyScores={() => router.push("/dashboard")}
           />
         )}
 

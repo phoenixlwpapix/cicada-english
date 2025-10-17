@@ -11,25 +11,25 @@ export default function LevelSelectCard({
   // CEFR级别描述信息
   const levelDescriptions = {
     A1: {
-      text: "小学1-3年级，词汇量500-1000",
+      text: "小学1 - 3年级\n词汇量500-1000",
       icon: Sprout,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     A2: {
-      text: "小学4-6年级，词汇量1000-2000",
+      text: "小学4 - 6年级\n词汇量1000-2000",
       icon: BookOpen,
       color: "text-secondary",
       bgColor: "bg-secondary/10",
     },
     B1: {
-      text: "初中，词汇量2000-3000",
+      text: "初中\n词汇量2000-3000",
       icon: GraduationCap,
       color: "text-accent",
       bgColor: "bg-accent/10",
     },
     B2: {
-      text: "高中，词汇量3000-4000",
+      text: "高中\n词汇量3000-4000",
       icon: Award,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
@@ -85,7 +85,9 @@ export default function LevelSelectCard({
                             : "text-muted-foreground"
                         }`}
                       >
-                        {levelInfo.text}
+                        {levelInfo.text.split("\n").map((line, index) => (
+                          <div key={index}>{line}</div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
@@ -99,8 +101,7 @@ export default function LevelSelectCard({
             <Button
               onClick={() => onGenerate()}
               disabled={loading}
-              className="font-bold text-base px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              style={{ backgroundColor: "var(--secondary2)" }}
+              className="font-bold text-base bg-secondary2 hover:bg-secondary2/90 px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
             >
               {loading ? (
                 <>

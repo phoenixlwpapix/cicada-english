@@ -9,6 +9,7 @@ import {
   Play,
   Pause,
   Volume2,
+  X as CloseIcon,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -31,6 +32,7 @@ const StoryCard = forwardRef(function StoryCard(
   const { width } = useWindowSize();
   const router = useRouter();
   const [showImage, setShowImage] = useState(true);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Speech synthesis states
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -235,7 +237,10 @@ const StoryCard = forwardRef(function StoryCard(
         </div>
         <div>
           <h2 className="text-xl font-bold text-card-foreground">阅读文章</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground flex items-center">
+            {loading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+            )}
             {loading ? "AI正在生成故事，请稍候..." : "仔细阅读下面的故事"}
           </p>
         </div>
@@ -318,6 +323,35 @@ const StoryCard = forwardRef(function StoryCard(
     );
   };
 
+  // Image Preview Modal Component
+  const ImagePreviewModal = () => (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={() => setIsPreviewOpen(false)}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Image Preview"
+    >
+      <div
+        className="relative max-w-4xl max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={generatedImage}
+          alt="Generated ad preview"
+          className="object-contain w-auto h-auto max-w-full max-h-[90vh] rounded-lg shadow-2xl"
+        />
+        <button
+          onClick={() => setIsPreviewOpen(false)}
+          className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 rounded-full p-1 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-purple"
+          aria-label="Close preview"
+        >
+          <CloseIcon />
+        </button>
+      </div>
+    </div>
+  );
+
   // Image Display Component
   const ImageDisplay = () => (
     <div
@@ -366,7 +400,7 @@ const StoryCard = forwardRef(function StoryCard(
             AI配图将在文章生成后启动
           </p>
           <p className="text-sm text-muted-foreground">
-            请耐心等待文章生成完成，AI将为您生成精美配图
+            请耐心等待文章生成完成...
           </p>
         </div>
       ) : imageLoading ? (
@@ -388,10 +422,11 @@ const StoryCard = forwardRef(function StoryCard(
             <img
               src={generatedImage}
               alt="AI生成的故事配图"
-              className="w-full h-auto object-contain rounded-md"
+              className="w-full h-auto object-contain rounded-md cursor-pointer"
               loading="lazy"
               decoding="async"
               style={{ aspectRatio: "1280/896" }}
+              onClick={() => setIsPreviewOpen(true)}
               onLoad={(e) =>
                 console.log(
                   "Image dimensions:",
@@ -409,34 +444,40 @@ const StoryCard = forwardRef(function StoryCard(
   if (width < 640) {
     // Mobile layout
     return (
-      <div className="px-2 py-4 space-y-4">
-        <StoryHeader />
-        <div className="space-y-6">
-          <div className="text-lg bg-muted text-primary rounded-xl px-2 border border-border/50">
-            <StoryContent />
+      <>
+        {isPreviewOpen && <ImagePreviewModal />}
+        <div className="px-2 py-4 space-y-4">
+          <StoryHeader />
+          <div className="space-y-6">
+            <div className="text-lg bg-muted text-primary rounded-xl px-2 border border-border/50">
+              <StoryContent />
+            </div>
+            <ImageDisplay />
           </div>
-          <ImageDisplay />
         </div>
-      </div>
+      </>
     );
   }
 
   // Desktop layout
   return (
-    <Card
-      ref={storyRef}
-      className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
-    >
-      <CardContent className="space-y-4">
-        <StoryHeader hoverEffect={true} />
-        <div className="space-y-6">
-          <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
-            <StoryContent />
+    <>
+      {isPreviewOpen && <ImagePreviewModal />}
+      <Card
+        ref={storyRef}
+        className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
+      >
+        <CardContent className="space-y-4">
+          <StoryHeader hoverEffect={true} />
+          <div className="space-y-6">
+            <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
+              <StoryContent />
+            </div>
+            <ImageDisplay />
           </div>
-          <ImageDisplay />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   );
 });
 
