@@ -11,25 +11,25 @@ export default function LevelSelectCard({
   // CEFR级别描述信息
   const levelDescriptions = {
     A1: {
-      text: "小学1 - 3年级\n词汇量500-1000",
+      text: "小学1 - 3年级，词汇量500-1000",
       icon: Sprout,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     A2: {
-      text: "小学4 - 6年级\n词汇量1000-2000",
+      text: "小学4 - 6年级，词汇量1000-2000",
       icon: BookOpen,
       color: "text-secondary",
       bgColor: "bg-secondary/10",
     },
     B1: {
-      text: "初中\n词汇量2000-3000",
+      text: "初中，词汇量2000-3000",
       icon: GraduationCap,
       color: "text-accent",
       bgColor: "bg-accent/10",
     },
     B2: {
-      text: "高中\n词汇量3000-4000",
+      text: "高中，词汇量3000-4000",
       icon: Award,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
@@ -45,7 +45,7 @@ export default function LevelSelectCard({
         <CardContent className="space-y-6 px-4 sm:px-8 py-6 sm:py-8">
           {/* 难度选项卡片 */}
           <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {["A1", "A2", "B1", "B2"].map((lvl) => {
                 const levelInfo = levelDescriptions[lvl];
                 const LevelIcon = levelInfo.icon;

@@ -73,7 +73,7 @@ export default function AppHeader() {
       <div className="max-w-6xl mx-auto px-2 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="relative hidden md:block">
+            <div className="relative">
               <img
                 src="/cicada.png"
                 alt="Logo"

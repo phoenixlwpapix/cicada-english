@@ -237,12 +237,12 @@ const StoryCard = forwardRef(function StoryCard(
         </div>
         <div>
           <h2 className="text-xl font-bold text-card-foreground">阅读文章</h2>
-          <p className="text-sm text-muted-foreground flex items-center">
+          <div className="text-sm text-muted-foreground flex items-center">
             {loading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
             )}
             {loading ? "AI正在生成故事，请稍候..." : "仔细阅读下面的故事"}
-          </p>
+          </div>
         </div>
       </div>
 
