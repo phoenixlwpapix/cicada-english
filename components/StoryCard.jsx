@@ -333,7 +333,7 @@ const StoryCard = forwardRef(function StoryCard(
         <div className="px-2 py-4 space-y-4">
           <StoryHeader />
           <div className="space-y-6">
-            <div className="text-lg bg-muted text-primary rounded-xl px-2 border border-border/50">
+            <div className="text-lg bg-muted text-primary rounded-xl px-2 py-2 border border-border/50">
               <StoryContent />
             </div>
             <ImageDisplay />
