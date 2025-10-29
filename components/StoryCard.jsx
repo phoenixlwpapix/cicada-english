@@ -301,7 +301,7 @@ const StoryCard = forwardRef(function StoryCard(
         </div>
       ) : generatedImage && showImage ? (
         <div className="space-y-3">
-          <div className="p-1 sm:p-4 mx-auto max-w-[80vw] sm:max-w-[640px] md:max-w-[768px] lg:max-w-[896px]">
+          <div className="p-1 sm:p-4 mx-auto max-w-[100vw] sm:max-w-[640px] md:max-w-[768px] lg:max-w-[896px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={generatedImage}
