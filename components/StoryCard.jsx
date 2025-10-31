@@ -1,6 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useWindowSize } from "@uidotdev/usehooks";
 import {
   BookOpen,
   Image as ImageIcon,
@@ -30,7 +29,6 @@ const StoryCard = forwardRef(function StoryCard(
   },
   ref
 ) {
-  const { width } = useWindowSize();
   const router = useRouter();
   const [showImage, setShowImage] = useState(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -238,13 +236,7 @@ const StoryCard = forwardRef(function StoryCard(
 
   // Image Display Component
   const ImageDisplay = () => (
-    <div
-      className={`bg-muted rounded-xl ${
-        width < 640
-          ? "px-2 border border-border/50"
-          : "p-6 border border-border/50"
-      }`}
-    >
+    <div className={`bg-muted rounded-xl px-2 sm:p-6 border border-border/50`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
           <ImageIcon className="w-5 h-5" />
@@ -325,11 +317,11 @@ const StoryCard = forwardRef(function StoryCard(
     </div>
   );
 
-  if (width < 640) {
-    // Mobile layout
-    return (
-      <>
-        {isPreviewOpen && <ImagePreviewModal />}
+  return (
+    <>
+      {isPreviewOpen && <ImagePreviewModal />}
+      {/* Mobile layout - no card wrapper for full width */}
+      <div className="block sm:hidden">
         <div className="px-2 py-4 space-y-4">
           <StoryHeader />
           <div className="space-y-6">
@@ -339,28 +331,24 @@ const StoryCard = forwardRef(function StoryCard(
             <ImageDisplay />
           </div>
         </div>
-      </>
-    );
-  }
-
-  // Desktop layout
-  return (
-    <>
-      {isPreviewOpen && <ImagePreviewModal />}
-      <Card
-        ref={storyRef}
-        className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
-      >
-        <CardContent className="space-y-4">
-          <StoryHeader hoverEffect={true} />
-          <div className="space-y-6">
-            <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
-              <StoryContent />
+      </div>
+      {/* Desktop layout - with card */}
+      <div className="hidden sm:block">
+        <Card
+          ref={storyRef}
+          className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
+        >
+          <CardContent className="space-y-4">
+            <StoryHeader hoverEffect={true} />
+            <div className="space-y-6">
+              <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
+                <StoryContent />
+              </div>
+              <ImageDisplay />
             </div>
-            <ImageDisplay />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 });
