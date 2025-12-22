@@ -13,7 +13,7 @@ import AppHeader from "@/components/AppHeader";
 import StoryCard from "@/components/StoryCard";
 import LevelSelectCard from "@/components/LevelSelectCard";
 import QuizCard from "@/components/QuizCard";
-import generatePrompt from "@/lib/prompt-generator";
+import generatePrompt, { generateCustomPrompt } from "@/lib/prompt-generator";
 import { processQuizSubmission } from "@/lib/quiz-data";
 import { Sparkles } from "lucide-react";
 import ReactConfetti from "react-confetti";
@@ -208,7 +208,17 @@ export default function MainApp() {
     }
   }, [questions.length]);
 
-  const handleGenerate = async (selectedLevel = level, retryCount = 0) => {
+  const handleGenerate = async (
+    selectedLevel = level,
+    customText = null,
+    retryCount = 0
+  ) => {
+    // Handle case where retryCount is passed as second argument (legacy calls)
+    if (typeof customText === "number") {
+      retryCount = customText;
+      customText = null;
+    }
+
     const maxRetries = 2;
     setCurrentStoryLevel(selectedLevel);
     setLoading(true);
@@ -223,12 +233,16 @@ export default function MainApp() {
 
     try {
       // Generate the prompt using the component
-      const promptResult = generatePrompt(selectedLevel);
+      const promptResult = customText
+        ? generateCustomPrompt(customText, selectedLevel)
+        : generatePrompt(selectedLevel);
 
       console.log(
         "[Frontend] Starting generation with:",
         "Level:",
         selectedLevel,
+        "Custom Text:",
+        !!customText,
         "Retry:",
         retryCount,
         "Full Prompt:",
@@ -267,7 +281,7 @@ export default function MainApp() {
             }/${maxRetries})`
           );
           setTimeout(
-            () => handleGenerate(selectedLevel, retryCount + 1),
+            () => handleGenerate(selectedLevel, customText, retryCount + 1),
             1000 * (retryCount + 1)
           );
           return;
@@ -295,7 +309,7 @@ export default function MainApp() {
             }/${maxRetries})`
           );
           setTimeout(
-            () => handleGenerate(selectedLevel, retryCount + 1),
+            () => handleGenerate(selectedLevel, customText, retryCount + 1),
             2000 * (retryCount + 1)
           );
           return;
@@ -428,7 +442,7 @@ export default function MainApp() {
           }/${maxRetries})`
         );
         setTimeout(
-          () => handleGenerate(selectedLevel, retryCount + 1),
+          () => handleGenerate(selectedLevel, customText, retryCount + 1),
           2000 * (retryCount + 1)
         );
         return;
@@ -522,7 +536,7 @@ export default function MainApp() {
           level={level}
           loading={loading}
           onLevelChange={setLevel}
-          onGenerate={() => handleGenerate(level)}
+          onGenerate={(customText) => handleGenerate(level, customText)}
         />
 
         {/* 文章卡片 */}
