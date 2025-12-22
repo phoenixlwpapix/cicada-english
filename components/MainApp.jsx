@@ -261,13 +261,13 @@ export default function MainApp() {
 
       console.log("[Frontend] API response status:", res.status);
 
+      const textResponse = await res.text();
       let data;
       try {
-        data = await res.json();
+        data = JSON.parse(textResponse);
         console.log("[Frontend] API response data:", data);
       } catch (parseError) {
         console.error("[Frontend] JSON parse error:", parseError);
-        const textResponse = await res.text();
         console.error(
           "[Frontend] Raw response:",
           textResponse.substring(0, 200)
@@ -330,39 +330,47 @@ export default function MainApp() {
       console.log("[Frontend] Raw result from API:", result);
 
       // 解析结果，提取故事、题目和图像提示
-      // 查找故事部分：从##开始到Questions:结束
-      const storyMatch = result.match(/##[\s\S]*?(?=Questions:)/i);
-      const questionsBlock = result.match(
-        /Questions:\s*([\s\S]*?)(?=ImagePrompt:)/i
-      );
-      const imagePromptMatch = result.match(/ImagePrompt:\s*([\s\S]*)/i);
+      // 使用 split 方法更稳健地分割各个部分
+      const parts = result.split(/Questions:/i);
 
-      console.log("[Frontend] Story match:", storyMatch);
-      console.log("[Frontend] Questions block:", questionsBlock);
-      console.log("[Frontend] ImagePrompt match:", imagePromptMatch);
+      if (parts.length < 2) {
+        console.error("[Frontend] Could not find 'Questions:' separator");
+        alert("无法解析返回内容（未找到问题部分），请重试！");
+        return;
+      }
 
-      const parsedStory = storyMatch ? storyMatch[0].trim() : "";
+      const storyPart = parts[0].trim();
+      const remainingPart = parts.slice(1).join("Questions:"); // Rejoin in case "Questions:" appears multiple times (unlikely but safe)
+
+      // Split questions and ImagePrompt
+      const questionParts = remainingPart.split(/ImagePrompt:/i);
+      const questionsText = questionParts[0].trim();
+      const parsedImagePrompt =
+        questionParts.length > 1 ? questionParts[1].trim() : "";
+
+      console.log("[Frontend] Story part length:", storyPart.length);
+      console.log("[Frontend] Questions part length:", questionsText.length);
+      console.log("[Frontend] ImagePrompt:", parsedImagePrompt);
+
+      const parsedStory = storyPart;
       const parsedQuestions = [];
       const parsedOptions = [];
       const parsedAnswers = [];
-      const parsedImagePrompt = imagePromptMatch
-        ? imagePromptMatch[1].trim()
-        : "";
 
-      if (!storyMatch) {
-        console.error("[Frontend] Could not parse story from result");
+      if (!parsedStory) {
+        console.error("[Frontend] Story content is empty");
         alert("无法解析故事内容，请重试！");
         return;
       }
 
-      if (!questionsBlock) {
-        console.error("[Frontend] Could not parse questions from result");
+      if (!questionsText) {
+        console.error("[Frontend] Questions content is empty");
         alert("无法解析问题内容，请重试！");
         return;
       }
 
-      if (questionsBlock) {
-        const questionLines = questionsBlock[1].trim().split("\n");
+      if (questionsText) {
+        const questionLines = questionsText.split("\n");
         let currentQuestion = "",
           currentOpts = [];
 

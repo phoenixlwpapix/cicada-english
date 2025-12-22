@@ -121,12 +121,12 @@ export async function POST(req) {
       );
     }
 
+    const textContent = await response.text();
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(textContent);
     } catch (parseError) {
       console.error("[API] JSON parse error:", parseError);
-      const textContent = await response.text();
       console.error(
         "[API] Raw response content:",
         textContent.substring(0, 200)
