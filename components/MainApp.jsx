@@ -15,7 +15,7 @@ import LevelSelectCard from "@/components/LevelSelectCard";
 import QuizCard from "@/components/QuizCard";
 import generatePrompt, { generateCustomPrompt } from "@/lib/prompt-generator";
 import { processQuizSubmission } from "@/lib/quiz-data";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowLeft } from "lucide-react";
 import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks";
 import { useState, useRef, useEffect } from "react";
@@ -276,8 +276,7 @@ export default function MainApp() {
         // If it's a JSON parse error and we haven't exceeded retries, try again
         if (retryCount < maxRetries) {
           console.log(
-            `[Frontend] Retrying request (attempt ${
-              retryCount + 1
+            `[Frontend] Retrying request (attempt ${retryCount + 1
             }/${maxRetries})`
           );
           setTimeout(
@@ -304,8 +303,7 @@ export default function MainApp() {
 
         if (isRetryableError && retryCount < maxRetries) {
           console.log(
-            `[Frontend] Retrying due to retryable error (attempt ${
-              retryCount + 1
+            `[Frontend] Retrying due to retryable error (attempt ${retryCount + 1
             }/${maxRetries})`
           );
           setTimeout(
@@ -445,8 +443,7 @@ export default function MainApp() {
 
       if (isNetworkError && retryCount < maxRetries) {
         console.log(
-          `[Frontend] Retrying due to network error (attempt ${
-            retryCount + 1
+          `[Frontend] Retrying due to network error (attempt ${retryCount + 1
           }/${maxRetries})`
         );
         setTimeout(
@@ -523,66 +520,131 @@ export default function MainApp() {
     }
   };
 
+  const handleReset = () => {
+    setStory("");
+    setQuestions([]);
+    setOptions([]);
+    setAnswers([]);
+    setUserAnswers([]);
+    setCurrentQuestion(0);
+    setScore(null);
+    setGeneratedImage(null);
+    setImageLoading(false);
+    setImageError(null);
+    setImagePrompt("");
+    localStorage.removeItem("cicada-session");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen">
       <AppHeader />
 
-      <main className="flex-grow max-w-6xl mx-auto px-3 py-3 md:px-6 md:py-6">
-        {/* Hero section */}
-        <div className="text-center mt-8 mb-8 animate-fade-in">
-          <div className="flex flex-col items-center gap-4">
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10">
-              <Sparkles className="w-8 h-8 text-primary dark:text-primary" />
-              <h1 className="text-2xl font-bold text-primary">
-                AI英语故事和阅读理解
-              </h1>
+      <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-10">
+        {/* Hero section - hidden when content is loaded */}
+        {!story && !loading && (
+          <div className="text-center mt-8 mb-12 animate-fade-in">
+            <div className="flex flex-col items-center gap-6">
+              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-3xl bg-primary/10 border border-primary/20 shadow-inner">
+                <Sparkles className="w-10 h-10 text-primary animate-pulse" />
+                <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
+                  AI 英语阅读实验室
+                </h1>
+              </div>
+              <p className="text-xl text-muted-foreground max-w-2xl font-medium">
+                利用最先进的 AI 技术，为你量身定制有趣的英语故事和精炼的阅读理解练习。
+              </p>
             </div>
           </div>
-        </div>
+        )}
 
-        <LevelSelectCard
-          level={level}
-          loading={loading}
-          onLevelChange={setLevel}
-          onGenerate={(customText) => handleGenerate(level, customText)}
-        />
-
-        {/* 文章卡片 */}
-        {(loading || story) && (
-          <section className="mb-16">
-            <StoryCard
+        {!story && !loading && (
+          <div className="max-w-4xl mx-auto">
+            <LevelSelectCard
+              level={level}
               loading={loading}
-              story={story}
-              user={user}
-              imageLoading={imageLoading}
-              imageError={imageError}
-              generatedImage={generatedImage}
-              storyRef={storyRef}
-              onQuizStart={(stopSpeaking) => {
-                // Store the stopSpeaking function to call when quiz is shown
-                storyCardRef.current = { stopSpeaking };
-              }}
+              onLevelChange={setLevel}
+              onGenerate={(customText) => handleGenerate(level, customText)}
             />
-          </section>
+          </div>
         )}
 
-        {questions.length > 0 && (
-          <QuizCard
-            questions={questions}
-            options={options}
-            answers={answers}
-            userAnswers={userAnswers}
-            currentQuestion={currentQuestion}
-            score={score}
-            user={user}
-            loading={loading}
-            onCurrentQuestionChange={setCurrentQuestion}
-            onAnswerChange={handleAnswerChange}
-            onSubmit={handleSubmit}
-            onGenerate={() => handleGenerate(currentStoryLevel)}
-            onMyScores={() => router.push("/dashboard")}
-          />
+        {/* Back Button and Content Area */}
+        {story && (
+          <div className="mb-8 animate-fade-in flex items-center justify-between">
+            <Button
+              onClick={handleReset}
+              variant="ghost"
+              className="group hover:bg-primary/10 text-primary font-bold flex items-center gap-2 px-6 py-4 rounded-2xl transition-all"
+            >
+              <div className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary group-hover:text-white transition-all">
+                <ArrowLeft className="w-5 h-5" />
+              </div>
+              <span>返回重新选择</span>
+            </Button>
+
+            {(loading || story) && questions.length > 0 && (
+              <div className="hidden lg:flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-2xl border border-border/50">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  沉浸式阅读模式
+                </span>
+              </div>
+            )}
+          </div>
         )}
+
+        {/* Content Section: Story and Quiz - Desktop Split Layout */}
+        <div className={`${story && questions.length > 0
+          ? "lg:flex lg:gap-6 lg:items-start"
+          : "max-w-4xl mx-auto"}`}
+        >
+          {/* 文章卡片 - Left Panel */}
+          {(loading || story) && (
+            <div className={`${story && questions.length > 0
+              ? "lg:w-[52%] lg:flex-shrink-0 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2 custom-scrollbar"
+              : "w-full"}`}
+            >
+              <StoryCard
+                loading={loading}
+                story={story}
+                user={user}
+                imageLoading={imageLoading}
+                imageError={imageError}
+                generatedImage={generatedImage}
+                storyRef={storyRef}
+                onQuizStart={(stopSpeaking) => {
+                  // Store the stopSpeaking function to call when quiz is shown
+                  storyCardRef.current = { stopSpeaking };
+                }}
+              />
+            </div>
+          )}
+
+          {/* 题目卡片 - Right Panel */}
+          {questions.length > 0 && (
+            <div className={`animate-fade-in ${story
+              ? "mt-8 lg:mt-0 lg:w-[48%] lg:flex-shrink-0"
+              : "w-full"}`}
+            >
+              <QuizCard
+                questions={questions}
+                options={options}
+                answers={answers}
+                userAnswers={userAnswers}
+                currentQuestion={currentQuestion}
+                score={score}
+                user={user}
+                loading={loading}
+                onCurrentQuestionChange={setCurrentQuestion}
+                onAnswerChange={handleAnswerChange}
+                onSubmit={handleSubmit}
+                onGenerate={() => handleGenerate(currentStoryLevel)}
+                onMyScores={() => router.push("/dashboard")}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Login Modal for Guest Users */}
         <Dialog open={showLoginModal} onOpenChange={handleModalClose}>

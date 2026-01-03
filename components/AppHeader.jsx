@@ -69,7 +69,7 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="top-0 z-50 backdrop-blur-lg  border-b border-border shadow-lg">
+    <header className="sticky top-0 z-[60] backdrop-blur-lg bg-background/80 border-b border-border shadow-md">
       <div className="max-w-6xl mx-auto px-2 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -228,23 +228,20 @@ export default function AppHeader() {
               }
             >
               <div
-                className={`relative w-6 h-6 bg-white rounded-full shadow-md transform transition-all duration-300 ease-in-out flex items-center justify-center ${
-                  isDark ? "translate-x-6" : "translate-x-1"
-                }`}
+                className={`relative w-6 h-6 bg-white rounded-full shadow-md transform transition-all duration-300 ease-in-out flex items-center justify-center ${isDark ? "translate-x-6" : "translate-x-1"
+                  }`}
               >
                 <Sun
-                  className={`w-4 h-4 text-amber-500 absolute transition-all duration-300 ${
-                    isDark
+                  className={`w-4 h-4 text-amber-500 absolute transition-all duration-300 ${isDark
                       ? "opacity-0 rotate-180 scale-0"
                       : "opacity-100 rotate-0 scale-100"
-                  }`}
+                    }`}
                 />
                 <Moon
-                  className={`w-4 h-4 text-slate-700 absolute transition-all duration-300 ${
-                    isDark
+                  className={`w-4 h-4 text-slate-700 absolute transition-all duration-300 ${isDark
                       ? "opacity-100 rotate-0 scale-100"
                       : "opacity-0 -rotate-180 scale-0"
-                  }`}
+                    }`}
                 />
               </div>
             </button>

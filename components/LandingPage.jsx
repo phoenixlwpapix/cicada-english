@@ -40,7 +40,7 @@ export default function LandingPage() {
               <Link href="/login">
                 <Button
                   size="lg"
-                  className="text-lg px-8 h-14 rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all"
+                  className="text-lg px-8 h-14 rounded-full bg-gradient-to-r from-[#03396c] via-[#2481b8] to-[#33a9d8] hover:from-[#022b52] hover:via-[#1a6a9b] hover:to-[#2888b0] text-white shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-1 transition-all duration-300 font-bold tracking-wide border-0"
                 >
                   立即开始 <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -49,7 +49,7 @@ export default function LandingPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="text-lg px-8 h-14 rounded-full"
+                  className="text-lg px-8 h-14 rounded-full border-2 border-slate-200 hover:border-[#33a9d8] hover:text-[#33a9d8] hover:bg-blue-50/50 text-slate-600 transition-all duration-300 bg-transparent"
                 >
                   了解更多
                 </Button>

@@ -14,6 +14,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 
 const StoryCard = forwardRef(function StoryCard(
@@ -98,257 +99,297 @@ const StoryCard = forwardRef(function StoryCard(
 
   // Story Header Component
   const StoryHeader = ({ hoverEffect = false }) => (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div
-          className={`p-3 rounded-xl bg-secondary text-primary-foreground shadow-lg transition-transform duration-300 ${
-            hoverEffect ? "group-hover:scale-110" : ""
-          }`}
-        >
-          <BookOpen className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-card-foreground">阅读文章</h2>
-          <div className="text-sm text-muted-foreground flex items-center">
-            {loading && (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-            )}
-            {loading ? "AI正在生成故事，请稍候..." : "仔细阅读下面的故事"}
+    <div className="relative overflow-hidden rounded-t-xl transition-all duration-500 p-6">
+      <div className="relative z-10 flex items-end justify-between h-full">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-3 rounded-xl bg-primary text-primary-foreground shadow-lg transition-transform duration-300 ${hoverEffect ? "group-hover:scale-110" : ""}`}
+          >
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-card-foreground">
+              阅读文章
+            </h2>
+            <div className="text-sm flex items-center text-muted-foreground">
+              {loading && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+              )}
+              {loading ? "AI正在生成故事，请稍候..." : "仔细阅读下面的故事"}
+              {!user && !loading && (
+                <span className="ml-2 text-amber-500 font-bold hidden sm:inline">
+                  (登录解锁AI绘图)
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Text-to-Speech Button */}
-      {!loading && story && (
-        <Button
-          onClick={handlePlayPause}
-          variant="outline"
-          size="sm"
-          className={`flex items-center gap-2 transition-colors ${
-            audioGenerated
-              ? "bg-muted/50 hover:bg-muted"
-              : "bg-muted/20 hover:bg-muted/30 opacity-60"
-          }`}
-          disabled={isGenerating}
-          aria-label={
-            isPaused ? "继续朗读" : isPlaying ? "暂停朗读" : "开始朗读"
-          }
-        >
-          {isGenerating ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-              <span className="text-sm">AI语音生成中</span>
-            </>
-          ) : isPlaying ? (
-            isPaused ? (
+        {/* Text-to-Speech Button */}
+        {!loading && story && (
+          <Button
+            onClick={handlePlayPause}
+            variant="outline"
+            size="sm"
+            className={`flex items-center gap-2 transition-all shadow-md active:scale-95 ${audioGenerated ? "" : "opacity-60"}`}
+            disabled={isGenerating}
+            aria-label={
+              isPaused ? "继续朗读" : isPlaying ? "暂停朗读" : "开始朗读"
+            }
+          >
+            {isGenerating ? (
               <>
-                <Play className="w-4 h-4" />
-                <span className="text-sm">继续</span>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                <span className="text-sm">AI语音生成中</span>
               </>
+            ) : isPlaying ? (
+              isPaused ? (
+                <>
+                  <Play className="w-4 h-4" />
+                  <span className="text-sm font-bold">继续</span>
+                </>
+              ) : (
+                <>
+                  <Pause className="w-4 h-4" />
+                  <span className="text-sm font-bold">暂停</span>
+                </>
+              )
             ) : (
               <>
-                <Pause className="w-4 h-4" />
-                <span className="text-sm">暂停</span>
+                <Volume2 className="w-4 h-4" />
+                <span className="text-sm font-bold">朗读</span>
               </>
-            )
-          ) : (
-            <>
-              <Volume2 className="w-4 h-4" />
-              <span className="text-sm">朗读</span>
-            </>
-          )}
-        </Button>
-      )}
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 
   // Story Content Component
-  const StoryContent = () => {
+  const StoryContent = ({ storyTitle, storyContent }) => {
     if (loading) {
       return (
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <div className="h-6 bg-border rounded-md animate-pulse"></div>
-            <div className="h-4 bg-border rounded-md animate-pulse w-3/4"></div>
+        <div className="relative min-h-[400px] flex flex-col items-center justify-center py-12 overflow-hidden">
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 animate-pulse"></div>
+
+          {/* Floating decorative elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-8 left-8 w-16 h-16 rounded-full bg-primary/10 animate-bounce" style={{ animationDelay: '0s', animationDuration: '3s' }}></div>
+            <div className="absolute top-16 right-12 w-10 h-10 rounded-full bg-secondary/10 animate-bounce" style={{ animationDelay: '0.5s', animationDuration: '2.5s' }}></div>
+            <div className="absolute bottom-16 left-16 w-12 h-12 rounded-full bg-primary/10 animate-bounce" style={{ animationDelay: '1s', animationDuration: '3.5s' }}></div>
+            <div className="absolute bottom-8 right-8 w-8 h-8 rounded-full bg-secondary/10 animate-bounce" style={{ animationDelay: '1.5s', animationDuration: '2s' }}></div>
           </div>
-          <div className="space-y-2">
-            <div className="h-4 bg-border rounded-md animate-pulse"></div>
-            <div className="h-4 bg-border rounded-md animate-pulse"></div>
-            <div className="h-4 bg-border rounded-md animate-pulse w-5/6"></div>
-          </div>
-          <div className="space-y-2">
-            <div className="h-4 bg-border rounded-md animate-pulse"></div>
-            <div className="h-4 bg-border rounded-md animate-pulse w-1/2"></div>
+
+          {/* Main loading content */}
+          <div className="relative z-10 flex flex-col items-center text-center px-6">
+            {/* Animated book icon */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+              <div className="relative p-6 bg-gradient-to-br from-primary to-primary/80 rounded-2xl shadow-2xl">
+                <BookOpen className="w-12 h-12 text-primary-foreground animate-pulse" />
+              </div>
+            </div>
+
+            {/* Loading text */}
+            <h3 className="text-2xl font-bold text-foreground mb-2">
+              正在创作您的专属故事
+            </h3>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              AI 正在根据您的选择生成个性化英语学习内容，请稍候...
+            </p>
+
+            {/* Animated progress bar */}
+            <div className="w-64 h-2 bg-border/50 rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] animate-pulse rounded-full"></div>
+            </div>
+
+            {/* Decorative skeleton preview */}
+            <div className="w-full max-w-md mt-8 space-y-3 opacity-40">
+              <div className="h-6 bg-gradient-to-r from-border via-border/60 to-border rounded-lg animate-pulse w-3/4 mx-auto"></div>
+              <div className="h-4 bg-gradient-to-r from-border via-border/60 to-border rounded-lg animate-pulse w-full"></div>
+              <div className="h-4 bg-gradient-to-r from-border via-border/60 to-border rounded-lg animate-pulse w-5/6"></div>
+              <div className="h-4 bg-gradient-to-r from-border via-border/60 to-border rounded-lg animate-pulse w-4/5"></div>
+            </div>
           </div>
         </div>
       );
     }
 
     return (
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          p: ({ node, ...props }) => <p className="mt-4" {...props} />,
-          h1: ({ node, ...props }) => (
-            <h1 className="text-2xl font-bold mt-6 mb-4" {...props} />
-          ),
-          h2: ({ node, ...props }) => (
-            <h2 className="text-xl font-semibold mt-5 mb-3" {...props} />
-          ),
-          li: ({ node, ...props }) => (
-            <li className="ml-6 list-disc" {...props} />
-          ),
-        }}
-      >
-        {story}
-      </ReactMarkdown>
+      <>
+        {/* Title without image background (when image is hidden or not available) */}
+        {storyTitle && (!generatedImage || !showImage) && (
+          <h1 className="text-3xl font-extrabold mt-0 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+            {storyTitle}
+          </h1>
+        )}
+
+        {/* Remaining content */}
+        <div className="prose prose-slate dark:prose-invert max-w-none">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ node, ...props }) => <p className="mt-4 leading-relaxed text-lg" {...props} />,
+              h1: ({ node, ...props }) => (
+                <h1 className="text-3xl font-extrabold mt-0 mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-2xl font-bold mt-8 mb-4 border-b pb-2" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="ml-6 list-disc mb-2" {...props} />
+              ),
+            }}
+          >
+            {storyContent}
+          </ReactMarkdown>
+        </div>
+      </>
     );
   };
 
-  // Image Preview Modal Component
-  const ImagePreviewModal = () => (
-    <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={() => setIsPreviewOpen(false)}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Image Preview"
-    >
-      <div
-        className="relative max-w-4xl max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <img
-          src={generatedImage}
-          alt="Generated ad preview"
-          className="object-contain w-auto h-auto max-w-full max-h-[90vh] rounded-lg shadow-2xl"
-        />
-        <button
-          onClick={() => setIsPreviewOpen(false)}
-          className="absolute -top-3 -right-3 bg-white dark:bg-gray-800 rounded-full p-1 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-purple"
-          aria-label="Close preview"
-        >
-          <CloseIcon />
-        </button>
-      </div>
-    </div>
-  );
+  // Image Preview Modal Component - rendered via portal to escape stacking context
+  const ImagePreviewModal = () => {
+    if (typeof document === 'undefined') return null;
 
-  // Image Display Component
-  const ImageDisplay = () => (
-    <div className={`bg-muted rounded-xl px-2 sm:p-6 border border-border/50`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-card-foreground flex items-center gap-2">
-          <ImageIcon className="w-5 h-5" />
-          AI配图
-        </h3>
-        {generatedImage && (
+    return createPortal(
+      <div
+        className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4"
+        onClick={() => setIsPreviewOpen(false)}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Image Preview"
+      >
+        <div
+          className="relative max-w-5xl max-h-[95vh] animate-in zoom-in-95 duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={generatedImage}
+            alt="Full size"
+            className="object-contain w-auto h-auto max-w-full max-h-[90vh] rounded-xl shadow-2xl border-4 border-white/10"
+          />
           <button
+            onClick={() => setIsPreviewOpen(false)}
+            className="absolute -top-4 -right-4 bg-white text-black p-2 rounded-full shadow-xl hover:bg-gray-200 transition-colors z-10"
+          >
+            <CloseIcon className="w-6 h-6" />
+          </button>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  // Control Buttons (Toggle Image)
+  const ActionControls = () => (
+    <div className="flex items-center justify-between px-6 py-3 bg-muted/30 border-t border-border/50">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+          显示设置
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        {generatedImage && (
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowImage(!showImage)}
-            className="p-2 rounded-md hover:bg-muted-foreground/10 transition-colors"
-            aria-label={showImage ? "隐藏图片" : "显示图片"}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary"
           >
             {showImage ? (
-              <EyeOff className="w-5 h-5 text-muted-foreground" />
+              <>
+                <EyeOff className="w-4 h-4" />
+                <span>隐藏封面</span>
+              </>
             ) : (
-              <Eye className="w-5 h-5 text-muted-foreground" />
+              <>
+                <Eye className="w-4 h-4" />
+                <span>显示封面</span>
+              </>
             )}
-          </button>
+          </Button>
+        )}
+        {generatedImage && showImage && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPreviewOpen(true)}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary"
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span>查看大图</span>
+          </Button>
         )}
       </div>
-
-      {!user ? (
-        <div className="text-center py-8">
-          <div className="text-amber-500 mb-3">🔒</div>
-          <p className="text-amber-700 dark:text-amber-300 font-medium mb-2">
-            登录后解锁AI配图功能
-          </p>
-          <p className="text-sm text-muted-foreground mb-4">
-            登录用户可以查看AI生成的精美配图，并挑战排行榜！
-          </p>
-          <Button onClick={() => router.push("/login")} className="font-medium">
-            立即登录
-          </Button>
-        </div>
-      ) : loading ? (
-        <div className="text-center py-8">
-          <p className="text-primary dark:text-blue-300 font-medium mb-2">
-            AI配图将在文章生成后启动
-          </p>
-          <p className="text-sm text-muted-foreground">
-            请耐心等待文章生成完成...
-          </p>
-        </div>
-      ) : imageLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-4"></div>
-          <span className="text-muted-foreground">
-            AI正在生成配图，请稍候...
-          </span>
-        </div>
-      ) : imageError ? (
-        <div className="text-center py-8">
-          <div className="text-red-500 mb-2">❌</div>
-          <p className="text-red-600 dark:text-red-400 text-sm">{imageError}</p>
-        </div>
-      ) : generatedImage && showImage ? (
-        <div className="space-y-3">
-          <div className="p-1 sm:p-4 mx-auto max-w-[100vw] sm:max-w-[640px] md:max-w-[768px] lg:max-w-[896px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={generatedImage}
-              alt="AI生成的故事配图"
-              className="w-full h-auto object-contain rounded-md cursor-pointer"
-              loading="lazy"
-              decoding="async"
-              style={{ aspectRatio: "1280/896" }}
-              onClick={() => setIsPreviewOpen(true)}
-              onLoad={(e) =>
-                console.log(
-                  "Image dimensions:",
-                  e.target.naturalWidth,
-                  e.target.naturalHeight
-                )
-              }
-            />
-          </div>
-        </div>
-      ) : null}
     </div>
   );
+
+  // Extract title from story (first line that starts with #)
+  const extractTitle = (storyText) => {
+    if (!storyText) return { title: null, remainingContent: storyText };
+    const lines = storyText.split('\n');
+    let titleLine = null;
+    let titleIndex = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmedLine = lines[i].trim();
+      if (trimmedLine.startsWith('# ')) {
+        titleLine = trimmedLine.substring(2).trim();
+        titleIndex = i;
+        break;
+      }
+    }
+
+    if (titleLine !== null) {
+      const remainingContent = [
+        ...lines.slice(0, titleIndex),
+        ...lines.slice(titleIndex + 1)
+      ].join('\n').trim();
+      return { title: titleLine, remainingContent };
+    }
+
+    return { title: null, remainingContent: storyText };
+  };
+
+  const { title: storyTitle, remainingContent: storyContent } = extractTitle(story);
 
   return (
     <>
       {isPreviewOpen && <ImagePreviewModal />}
-      {/* Mobile layout - no card wrapper for full width */}
-      <div className="block sm:hidden">
-        <div className="px-2 py-4 space-y-4">
-          <StoryHeader />
-          <div className="space-y-6">
-            <div className="text-lg bg-muted text-primary rounded-xl px-2 py-2 border border-border/50">
-              <StoryContent />
+
+      {/* Title with Image Background - Outside the Card */}
+      {generatedImage && showImage && (
+        <div className="relative overflow-hidden rounded-2xl mb-6 group min-h-[200px] sm:min-h-[280px] shadow-2xl">
+          <img
+            src={generatedImage}
+            alt="Story background"
+            className="absolute inset-0 w-full h-full object-cover transform scale-105 group-hover:scale-110 transition-transform duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+          {storyTitle && (
+            <div className="absolute inset-0 z-10 px-6 sm:px-10 py-8 flex items-end">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-lg">
+                {storyTitle}
+              </h1>
             </div>
-            <ImageDisplay />
-          </div>
+          )}
         </div>
-      </div>
-      {/* Desktop layout - with card */}
-      <div className="hidden sm:block">
-        <Card
-          ref={storyRef}
-          className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group animate-fade-in-up"
-        >
-          <CardContent className="space-y-4">
-            <StoryHeader hoverEffect={true} />
-            <div className="space-y-6">
-              <div className="text-lg bg-muted text-primary rounded-xl p-6 border border-border/50">
-                <StoryContent />
-              </div>
-              <ImageDisplay />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      )}
+
+      {/* Article Container */}
+      <Card
+        ref={storyRef}
+        className="overflow-hidden border-border/60 shadow-2xl bg-card/50 backdrop-blur-xl animate-fade-in-up"
+      >
+        <StoryHeader hoverEffect={true} />
+        <ActionControls />
+        <CardContent className="p-6 sm:p-10">
+          <StoryContent storyTitle={storyTitle} storyContent={storyContent} />
+        </CardContent>
+      </Card>
     </>
   );
 });
