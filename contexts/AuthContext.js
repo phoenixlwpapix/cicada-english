@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { getUserProfile } from "@/lib/quiz-data";
 
@@ -32,6 +32,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const previousUserIdRef = useRef(null);
+
+  // Get queryClient from context (may be null during initial render)
+  let queryClient = null;
+  try {
+    queryClient = useQueryClient();
+  } catch (e) {
+    // QueryClientProvider not yet mounted
+  }
 
   useEffect(() => {
     // Get initial session
@@ -39,7 +48,9 @@ export const AuthProvider = ({ children }) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      previousUserIdRef.current = currentUser?.id ?? null;
       setLoading(false);
     };
 
@@ -49,12 +60,23 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      const previousUserId = previousUserIdRef.current;
+      const currentUserId = currentUser?.id ?? null;
+
+      // Clear cache when user changes (logout or switch account)
+      if (previousUserId !== currentUserId && queryClient) {
+        // Clear all queries to prevent data leakage between users
+        queryClient.clear();
+      }
+
+      setUser(currentUser);
+      previousUserIdRef.current = currentUserId;
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   // Query for user profile
   const {
@@ -84,6 +106,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signOut = async () => {
+    // Clear all cached queries before signing out
+    if (queryClient) {
+      queryClient.clear();
+    }
     const { error } = await supabase.auth.signOut();
     return { error };
   };
@@ -102,3 +128,4 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+

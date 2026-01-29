@@ -71,14 +71,16 @@ export default function DashboardPage() {
 
   // Query for user stats
   const { data: userStats, isLoading: statsLoading } = useQuery({
-    queryKey: ["userStats"],
+    queryKey: ["userStats", user?.id],
     queryFn: getUserStats,
+    enabled: !!user,
   });
 
   // Query for chart data based on period
   const { data: chartAttempts, isLoading: chartLoading } = useQuery({
-    queryKey: ["quizAttempts", period === "week" ? 7 : 30],
+    queryKey: ["quizAttempts", user?.id, period === "week" ? 7 : 30],
     queryFn: () => getQuizAttemptsForPeriod(period === "week" ? 7 : 30),
+    enabled: !!user,
   });
 
   // Query for leaderboard
@@ -90,25 +92,25 @@ export default function DashboardPage() {
   // Process data for display
   const stats = userStats
     ? {
-        totalQuestions: userStats.totalQuestions,
-        totalCorrectAnswers: userStats.totalCorrectAnswers,
-        accuracy: Math.round(userStats.overallAccuracy),
-        weeklyData: [],
-        monthlyData: [],
-      }
+      totalQuestions: userStats.totalQuestions,
+      totalCorrectAnswers: userStats.totalCorrectAnswers,
+      accuracy: Math.round(userStats.overallAccuracy),
+      weeklyData: [],
+      monthlyData: [],
+    }
     : {
-        totalQuestions: 0,
-        totalCorrectAnswers: 0,
-        accuracy: 0,
-        weeklyData: [],
-        monthlyData: [],
-      };
+      totalQuestions: 0,
+      totalCorrectAnswers: 0,
+      accuracy: 0,
+      weeklyData: [],
+      monthlyData: [],
+    };
 
   const chartDataFiltered = chartAttempts
     ? chartAttempts.map((attempt) => ({
-        date: new Date(attempt.created_at).toLocaleDateString(),
-        score: attempt.score,
-      }))
+      date: new Date(attempt.created_at).toLocaleDateString(),
+      score: attempt.score,
+    }))
     : [];
 
   const dataLoaded = !statsLoading && !chartLoading && !leaderboardLoading;
@@ -279,27 +281,25 @@ export default function DashboardPage() {
                   {leaderboard.map((entry, index) => (
                     <div
                       key={entry.email}
-                      className={`flex items-center justify-between p-3 rounded-xl transition-all hover:scale-[1.02] cursor-pointer ${
-                        index === 0
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all hover:scale-[1.02] cursor-pointer ${index === 0
                           ? "bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20"
                           : index === 1
-                          ? "bg-gradient-to-r from-slate-400/10 to-slate-400/5 border border-slate-400/20"
-                          : index === 2
-                          ? "bg-gradient-to-r from-amber-700/10 to-amber-700/5 border border-amber-700/20"
-                          : "bg-muted/50 border border-transparent"
-                      }`}
+                            ? "bg-gradient-to-r from-slate-400/10 to-slate-400/5 border border-slate-400/20"
+                            : index === 2
+                              ? "bg-gradient-to-r from-amber-700/10 to-amber-700/5 border border-amber-700/20"
+                              : "bg-muted/50 border border-transparent"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${
-                            index === 0
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${index === 0
                               ? "bg-amber-500 text-white"
                               : index === 1
-                              ? "bg-slate-400 text-white"
-                              : index === 2
-                              ? "bg-amber-700 text-white"
-                              : "bg-muted text-muted-foreground"
-                          }`}
+                                ? "bg-slate-400 text-white"
+                                : index === 2
+                                  ? "bg-amber-700 text-white"
+                                  : "bg-muted text-muted-foreground"
+                            }`}
                         >
                           {index + 1}
                         </div>
