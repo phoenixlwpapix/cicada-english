@@ -22,7 +22,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { generatePortrait, base64ToBlobUrl } from "@/lib/image-generator";
 
 export default function MainApp() {
   const [story, setStory] = useState("");
@@ -36,12 +35,6 @@ export default function MainApp() {
   const [level, setLevel] = useState("A2");
   const [currentStoryLevel, setCurrentStoryLevel] = useState("A2");
 
-  // Image generation states
-  const [generatedImage, setGeneratedImage] = useState(null);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [imageError, setImageError] = useState(null);
-  const [imagePrompt, setImagePrompt] = useState("");
-
   const { width, height } = useWindowSize();
   const { user } = useAuth();
   const router = useRouter();
@@ -50,7 +43,6 @@ export default function MainApp() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [guestScore, setGuestScore] = useState(null);
-  const [isBouncing, setIsBouncing] = useState(true);
 
   const handleModalClose = () => {
     setShowLoginModal(false);
@@ -64,7 +56,6 @@ export default function MainApp() {
   const submitQuizMutation = useMutation({
     mutationFn: processQuizSubmission,
     onSuccess: () => {
-      // Invalidate all dashboard-related queries
       queryClient.invalidateQueries({
         predicate: (query) =>
           query.queryKey[0] === "userStats" ||
@@ -78,23 +69,15 @@ export default function MainApp() {
     },
   });
 
-  // --- 在这里添加下面的代码 ---
+  // Scroll to story when loaded
   useEffect(() => {
-    // 检查 story 是否有内容，并且 ref 已经附加到 DOM 元素上
     if (story && storyRef.current) {
       storyRef.current.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
     }
-  }, [story]); // 依赖项数组是关键，这个 effect 只在 `story` 状态改变时运行
-
-  // Stop bouncing animation when generation starts
-  useEffect(() => {
-    if (loading) {
-      setIsBouncing(false);
-    }
-  }, [loading]);
+  }, [story]);
 
   // Clear all content when user logs out
   useEffect(() => {
@@ -106,11 +89,6 @@ export default function MainApp() {
       setUserAnswers([]);
       setCurrentQuestion(0);
       setScore(null);
-      setGeneratedImage(null);
-      setImageLoading(false);
-      setImageError(null);
-      setImagePrompt("");
-      // Clear saved session data
       localStorage.removeItem("cicada-session");
     }
   }, [user]);
@@ -130,8 +108,6 @@ export default function MainApp() {
           setCurrentQuestion(sessionData.currentQuestion || 0);
           setScore(sessionData.score || null);
           setCurrentStoryLevel(sessionData.currentStoryLevel || "A2");
-          setGeneratedImage(sessionData.generatedImage || null);
-          setImagePrompt(sessionData.imagePrompt || "");
         } catch (error) {
           console.error("Error loading saved session:", error);
           localStorage.removeItem("cicada-session");
@@ -152,8 +128,6 @@ export default function MainApp() {
         currentQuestion,
         score,
         currentStoryLevel,
-        generatedImage,
-        imagePrompt,
         timestamp: Date.now(),
       };
       localStorage.setItem("cicada-session", JSON.stringify(sessionData));
@@ -167,39 +141,7 @@ export default function MainApp() {
     currentQuestion,
     score,
     currentStoryLevel,
-    generatedImage,
-    imagePrompt,
   ]);
-
-  // Generate image after story is successfully created (only for logged-in users)
-  useEffect(() => {
-    if (
-      user &&
-      story &&
-      !loading &&
-      !generatedImage &&
-      !imageLoading &&
-      !imageError
-    ) {
-      if (imagePrompt) {
-        console.log(
-          "[Image Generation] Using extracted ImagePrompt:",
-          imagePrompt
-        );
-        generateImage(imagePrompt);
-      } else {
-        // Fallback to using story content if no ImagePrompt is found
-        const fallbackPrompt = `Create a child-friendly educational illustration for this story: "${story
-          .replace(/ImagePrompt:[\s\S]*/, "")
-          .trim()}"`;
-        console.log(
-          "[Image Generation] No ImagePrompt found, using fallback:",
-          fallbackPrompt
-        );
-        generateImage(fallbackPrompt);
-      }
-    }
-  }, [user, story, loading, imagePrompt]);
 
   // Stop speech when quiz is shown
   useEffect(() => {
@@ -213,7 +155,6 @@ export default function MainApp() {
     customText = null,
     retryCount = 0
   ) => {
-    // Handle case where retryCount is passed as second argument (legacy calls)
     if (typeof customText === "number") {
       retryCount = customText;
       customText = null;
@@ -225,14 +166,9 @@ export default function MainApp() {
     setScore(null);
     setStory("");
     setQuestions("");
-    setGeneratedImage(null);
-    setImageError(null);
-    setImagePrompt("");
-    // Clear saved session data when generating new content
     localStorage.removeItem("cicada-session");
 
     try {
-      // Generate the prompt using the component
       const promptResult = customText
         ? generateCustomPrompt(customText, selectedLevel)
         : generatePrompt(selectedLevel);
@@ -244,9 +180,7 @@ export default function MainApp() {
         "Custom Text:",
         !!customText,
         "Retry:",
-        retryCount,
-        "Full Prompt:",
-        promptResult.prompt
+        retryCount
       );
 
       const res = await fetch("/api/generate", {
@@ -268,16 +202,10 @@ export default function MainApp() {
         console.log("[Frontend] API response data:", data);
       } catch (parseError) {
         console.error("[Frontend] JSON parse error:", parseError);
-        console.error(
-          "[Frontend] Raw response:",
-          textResponse.substring(0, 200)
-        );
 
-        // If it's a JSON parse error and we haven't exceeded retries, try again
         if (retryCount < maxRetries) {
           console.log(
-            `[Frontend] Retrying request (attempt ${retryCount + 1
-            }/${maxRetries})`
+            `[Frontend] Retrying request (attempt ${retryCount + 1}/${maxRetries})`
           );
           setTimeout(
             () => handleGenerate(selectedLevel, customText, retryCount + 1),
@@ -293,7 +221,6 @@ export default function MainApp() {
       if (!res.ok) {
         console.error("[Frontend] API error:", data);
 
-        // Check for specific error types that might benefit from retry
         const isRetryableError =
           data.error?.includes("暂时不可用") ||
           data.error?.includes("服务返回格式错误") ||
@@ -303,8 +230,7 @@ export default function MainApp() {
 
         if (isRetryableError && retryCount < maxRetries) {
           console.log(
-            `[Frontend] Retrying due to retryable error (attempt ${retryCount + 1
-            }/${maxRetries})`
+            `[Frontend] Retrying due to retryable error (attempt ${retryCount + 1}/${maxRetries})`
           );
           setTimeout(
             () => handleGenerate(selectedLevel, customText, retryCount + 1),
@@ -327,8 +253,7 @@ export default function MainApp() {
 
       console.log("[Frontend] Raw result from API:", result);
 
-      // 解析结果，提取故事、题目和图像提示
-      // 使用 split 方法更稳健地分割各个部分
+      // 解析结果，提取故事和题目
       const parts = result.split(/Questions:/i);
 
       if (parts.length < 2) {
@@ -338,17 +263,14 @@ export default function MainApp() {
       }
 
       const storyPart = parts[0].trim();
-      const remainingPart = parts.slice(1).join("Questions:"); // Rejoin in case "Questions:" appears multiple times (unlikely but safe)
+      const remainingPart = parts.slice(1).join("Questions:");
 
-      // Split questions and ImagePrompt
+      // Remove ImagePrompt if present
       const questionParts = remainingPart.split(/ImagePrompt:/i);
       const questionsText = questionParts[0].trim();
-      const parsedImagePrompt =
-        questionParts.length > 1 ? questionParts[1].trim() : "";
 
       console.log("[Frontend] Story part length:", storyPart.length);
       console.log("[Frontend] Questions part length:", questionsText.length);
-      console.log("[Frontend] ImagePrompt:", parsedImagePrompt);
 
       const parsedStory = storyPart;
       const parsedQuestions = [];
@@ -373,7 +295,6 @@ export default function MainApp() {
           currentOpts = [];
 
         for (let line of questionLines) {
-          // Trim leading whitespace for consistent processing
           const trimmedLine = line.trim();
 
           if (/^\d+\.\s/.test(trimmedLine)) {
@@ -384,7 +305,6 @@ export default function MainApp() {
             }
             currentQuestion = trimmedLine;
           } else if (/^[ABC]\.\s/.test(trimmedLine)) {
-            // Remove "A. " from the trimmed line
             currentOpts.push(trimmedLine.slice(3));
           } else if (/^Answer:\s*/i.test(trimmedLine)) {
             const correctLetter = trimmedLine.split(":")[1].trim();
@@ -397,7 +317,6 @@ export default function MainApp() {
           }
         }
 
-        // Push last question
         if (currentQuestion) {
           parsedQuestions.push(currentQuestion);
           parsedOptions.push(currentOpts);
@@ -433,18 +352,15 @@ export default function MainApp() {
       setAnswers(parsedAnswers);
       setUserAnswers(Array(parsedQuestions.length).fill(""));
       setCurrentQuestion(0);
-      setImagePrompt(parsedImagePrompt);
     } catch (err) {
       console.error("[Frontend] Error fetching from Gemini API:", err);
 
-      // Check if this is a network error that might benefit from retry
       const isNetworkError =
         err.name === "TypeError" || err.message.includes("fetch");
 
       if (isNetworkError && retryCount < maxRetries) {
         console.log(
-          `[Frontend] Retrying due to network error (attempt ${retryCount + 1
-          }/${maxRetries})`
+          `[Frontend] Retrying due to network error (attempt ${retryCount + 1}/${maxRetries})`
         );
         setTimeout(
           () => handleGenerate(selectedLevel, customText, retryCount + 1),
@@ -478,15 +394,12 @@ export default function MainApp() {
     const finalScore = correct * 20;
     setScore(finalScore);
 
-    // Check if user is authenticated
     if (!user) {
-      // Show modal for guest users
       setGuestScore(finalScore);
       setShowLoginModal(true);
       return;
     }
 
-    // Use mutation to submit quiz
     await submitQuizMutation.mutateAsync({
       totalQuestions: answers.length,
       correctAnswers: correct,
@@ -494,29 +407,11 @@ export default function MainApp() {
       user,
     });
 
-    // Clear saved session data after quiz completion
     localStorage.removeItem("cicada-session");
 
     if (correct === questions.length) {
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000); // 5 秒后关闭动画
-    }
-  };
-
-  // Generate image using the provided ImagePrompt
-  const generateImage = async (imagePrompt) => {
-    setImageLoading(true);
-    setImageError(null);
-
-    try {
-      const imageData = await generatePortrait(imagePrompt);
-      const imageUrl = base64ToBlobUrl(imageData, "image/png");
-      setGeneratedImage(imageUrl);
-    } catch (error) {
-      console.error("Image generation failed:", error);
-      setImageError("图片生成失败，请重试");
-    } finally {
-      setImageLoading(false);
+      setTimeout(() => setShowConfetti(false), 5000);
     }
   };
 
@@ -528,10 +423,6 @@ export default function MainApp() {
     setUserAnswers([]);
     setCurrentQuestion(0);
     setScore(null);
-    setGeneratedImage(null);
-    setImageLoading(false);
-    setImageError(null);
-    setImagePrompt("");
     localStorage.removeItem("cicada-session");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -540,26 +431,26 @@ export default function MainApp() {
     <div className="flex flex-col min-h-screen">
       <AppHeader />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 py-6 md:px-8 md:py-10">
+      <main className="flex-grow max-w-7xl mx-auto px-4 py-8 md:px-8 md:py-12">
         {/* Hero section - hidden when content is loaded */}
         {!story && !loading && (
-          <div className="text-center mt-8 mb-12 animate-fade-in">
-            <div className="flex flex-col items-center gap-6">
-              <div className="inline-flex items-center gap-3 px-8 py-4 rounded-3xl bg-primary/10 border border-primary/20 shadow-inner">
-                <Sparkles className="w-10 h-10 text-primary animate-pulse" />
-                <h1 className="text-3xl md:text-4xl font-black text-primary tracking-tight">
+          <div className="text-center mb-10 animate-fade-in">
+            <div className="flex flex-col items-center gap-5">
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-primary/10 border border-primary/20">
+                <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+                <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight">
                   AI 英语阅读实验室
                 </h1>
               </div>
-              <p className="text-xl text-muted-foreground max-w-2xl font-medium">
-                利用最先进的 AI 技术，为你量身定制有趣的英语故事和精炼的阅读理解练习。
+              <p className="text-lg text-muted-foreground max-w-xl font-medium leading-relaxed">
+                利用 AI 技术，为你量身定制有趣的英语故事和精炼的阅读理解练习
               </p>
             </div>
           </div>
         )}
 
         {!story && !loading && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <LevelSelectCard
               level={level}
               loading={loading}
@@ -571,23 +462,23 @@ export default function MainApp() {
 
         {/* Back Button and Content Area */}
         {story && (
-          <div className="mb-8 animate-fade-in flex items-center justify-between">
+          <div className="mb-6 animate-fade-in flex items-center justify-between">
             <Button
               onClick={handleReset}
               variant="ghost"
-              className="group hover:bg-primary/10 text-primary font-bold flex items-center gap-2 px-6 py-4 rounded-2xl transition-all"
+              className="group hover:bg-primary/10 text-primary font-medium flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
             >
-              <div className="p-2 bg-primary/10 rounded-xl group-hover:bg-primary group-hover:text-white transition-all">
-                <ArrowLeft className="w-5 h-5" />
+              <div className="p-1.5 bg-primary/10 rounded-lg group-hover:bg-primary group-hover:text-white transition-all">
+                <ArrowLeft className="w-4 h-4" />
               </div>
-              <span>返回重新选择</span>
+              <span className="hidden sm:inline">返回重新选择</span>
             </Button>
 
             {(loading || story) && questions.length > 0 && (
-              <div className="hidden lg:flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-2xl border border-border/50">
+              <div className="hidden lg:flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-xl border border-border/50">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  沉浸式阅读模式
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  沉浸式阅读
                 </span>
               </div>
             )}
@@ -596,25 +487,20 @@ export default function MainApp() {
 
         {/* Content Section: Story and Quiz - Desktop Split Layout */}
         <div className={`${story && questions.length > 0
-          ? "lg:flex lg:gap-6 lg:items-start"
-          : "max-w-4xl mx-auto"}`}
+          ? "lg:flex lg:gap-8 lg:items-start"
+          : "max-w-3xl mx-auto"}`}
         >
           {/* 文章卡片 - Left Panel */}
           {(loading || story) && (
             <div className={`${story && questions.length > 0
-              ? "lg:w-[52%] lg:flex-shrink-0 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2 custom-scrollbar"
+              ? "lg:w-[54%] lg:flex-shrink-0 lg:sticky lg:top-28 lg:self-start lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:pr-3 custom-scrollbar"
               : "w-full"}`}
             >
               <StoryCard
                 loading={loading}
                 story={story}
-                user={user}
-                imageLoading={imageLoading}
-                imageError={imageError}
-                generatedImage={generatedImage}
                 storyRef={storyRef}
                 onQuizStart={(stopSpeaking) => {
-                  // Store the stopSpeaking function to call when quiz is shown
                   storyCardRef.current = { stopSpeaking };
                 }}
               />
@@ -624,7 +510,7 @@ export default function MainApp() {
           {/* 题目卡片 - Right Panel */}
           {questions.length > 0 && (
             <div className={`animate-fade-in ${story
-              ? "mt-8 lg:mt-0 lg:w-[48%] lg:flex-shrink-0"
+              ? "mt-6 lg:mt-0 lg:w-[46%] lg:flex-shrink-0"
               : "w-full"}`}
             >
               <QuizCard

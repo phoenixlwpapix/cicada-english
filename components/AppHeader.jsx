@@ -69,8 +69,8 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-[60] backdrop-blur-lg bg-background/80 border-b border-border shadow-md">
-      <div className="max-w-6xl mx-auto px-2 py-2">
+    <header className="sticky top-0 z-[60] mx-4 mt-3 rounded-2xl backdrop-blur-lg bg-background/80 border border-border/50 shadow-lg">
+      <div className="max-w-6xl mx-auto px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="relative">

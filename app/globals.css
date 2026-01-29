@@ -337,14 +337,37 @@
 
   /* Split layout panel styling */
   .split-panel-article {
-    @apply lg:sticky lg:top-24;
-    max-height: calc(100vh - 8rem);
+    @apply lg:sticky lg:top-28;
+    max-height: calc(100vh - 9rem);
     overflow-y: auto;
   }
 
   .split-panel-quiz {
-    @apply lg:sticky lg:top-24;
-    max-height: calc(100vh - 8rem);
+    @apply lg:sticky lg:top-28;
+    max-height: calc(100vh - 9rem);
     overflow-y: auto;
+  }
+
+  /* Floating header body offset */
+  body {
+    padding-top: 0;
+  }
+
+  /* Smooth card hover transitions */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  /* Stats card gradient backgrounds */
+  .stats-card-primary {
+    @apply bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20;
+  }
+
+  .stats-card-secondary {
+    @apply bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/20;
+  }
+
+  .stats-card-accent {
+    @apply bg-gradient-to-br from-accent/5 to-accent/10 border-accent/20;
   }
 }

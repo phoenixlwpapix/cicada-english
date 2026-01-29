@@ -54,18 +54,18 @@ export default function LevelSelectCard({
   const IconComponent = currentLevel.icon;
 
   return (
-    <section className="mb-16">
-      <Card className="backdrop-blur-lg bg-card/70 border-border shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden">
-        <CardContent className="space-y-6 px-4 py-6 md:px-8 md:py-8">
+    <section className="mb-8">
+      <Card className="backdrop-blur-lg bg-card/80 border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+        <CardContent className="space-y-5 px-5 py-6 md:px-8 md:py-8">
           {/* Mode Selection */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-muted p-1 rounded-lg inline-flex">
+          <div className="flex justify-center">
+            <div className="bg-muted/50 p-1.5 rounded-xl inline-flex gap-1">
               <button
                 onClick={() => setMode("random")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === "random"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-background text-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -75,10 +75,10 @@ export default function LevelSelectCard({
               </button>
               <button
                 onClick={() => setMode("custom")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   mode === "custom"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-background text-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -90,62 +90,62 @@ export default function LevelSelectCard({
           </div>
 
           {/* 难度选项卡片 */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {["A1", "A2", "B1", "B2"].map((lvl) => {
-                const levelInfo = levelDescriptions[lvl];
-                const LevelIcon = levelInfo.icon;
-                const isSelected = level === lvl;
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {["A1", "A2", "B1", "B2"].map((lvl) => {
+              const levelInfo = levelDescriptions[lvl];
+              const LevelIcon = levelInfo.icon;
+              const isSelected = level === lvl;
 
-                return (
-                  <div
-                    key={lvl}
-                    onClick={() => onLevelChange(lvl)}
-                    className={`cursor-pointer transition-all duration-300 hover:scale-105 p-3 text-center space-y-1 rounded-lg border ${
-                      isSelected
-                        ? `ring-2 ring-primary shadow-lg ${levelInfo.bgColor} border-primary`
-                        : "hover:shadow-md bg-card border-border"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center space-x-1">
+              return (
+                <div
+                  key={lvl}
+                  onClick={() => onLevelChange(lvl)}
+                  className={`cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] p-4 text-center space-y-2 rounded-xl border-2 ${
+                    isSelected
+                      ? `shadow-lg ${levelInfo.bgColor} border-current ${levelInfo.color}`
+                      : "hover:shadow-md bg-card/50 border-border hover:border-muted-foreground/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <div className={`p-1.5 rounded-lg ${isSelected ? levelInfo.bgColor : 'bg-muted/50'}`}>
                       <LevelIcon
                         className={`w-4 h-4 ${
                           isSelected ? levelInfo.color : "text-muted-foreground"
                         }`}
                       />
-                      <span
-                        className={`text-lg font-bold ${
-                          isSelected ? levelInfo.color : "text-foreground"
-                        }`}
-                      >
-                        {lvl}
-                      </span>
                     </div>
-                    <div
-                      className={`text-sm ${
-                        isSelected ? "text-foreground" : "text-muted-foreground"
+                    <span
+                      className={`text-xl font-bold ${
+                        isSelected ? levelInfo.color : "text-foreground"
                       }`}
                     >
-                      {levelInfo.text.split("\n").map((line, index) => (
-                        <div key={index}>{line}</div>
-                      ))}
-                    </div>
+                      {lvl}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
+                  <div
+                    className={`text-xs leading-relaxed ${
+                      isSelected ? "text-foreground/80" : "text-muted-foreground"
+                    }`}
+                  >
+                    {levelInfo.text.split("，").map((line, index) => (
+                      <div key={index}>{line}</div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Custom Text Input */}
           {mode === "custom" && (
-            <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
-              <Label htmlFor="custom-text" className="mb-2 block">
+            <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-300 space-y-3">
+              <Label htmlFor="custom-text" className="text-sm font-medium">
                 粘贴您的文章（支持中文，AI将自动翻译并生成题目）
               </Label>
               <Textarea
                 id="custom-text"
                 placeholder="在此粘贴文章内容..."
-                className="min-h-[150px]"
+                className="min-h-[120px] resize-none rounded-xl border-border/50 focus:border-primary"
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
               />
@@ -153,13 +153,13 @@ export default function LevelSelectCard({
           )}
 
           {/* 生成按钮 */}
-          <div className="flex justify-center pt-8">
+          <div className="flex justify-center pt-4">
             <Button
               onClick={() =>
                 onGenerate(mode === "custom" ? customText : undefined)
               }
               disabled={loading || (mode === "custom" && !customText.trim())}
-              className="font-bold text-base bg-secondary2 hover:bg-secondary2/90 px-8 py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              className="font-bold text-base bg-secondary2 hover:bg-secondary2/90 px-10 py-6 rounded-xl shadow-lg shadow-secondary2/20 hover:shadow-xl hover:shadow-secondary2/30 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
             >
               {loading ? (
                 <>
